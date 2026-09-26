@@ -45,8 +45,18 @@ const G = {
     return { m: o };
   },
   click({ pitch = 1 }) {
-    const o = mono(0.04); const hp = new Biquad('hp', 2000);
-    for (let i = 0; i < o.length; i++) { const t = i / SR; o[i] = hp.run(noise()) * Math.exp(-t / 0.0016) * 0.7 + Math.sin(TAU * 2400 * pitch * t) * Math.exp(-t / 0.006) * 0.45; }
+    // crisp UI/mouse click: noise impulse through resonant bands, small release click, peak-normalized to 1
+    const o = mono(0.07), p = 1 + (pitch - 1) * 0.25;
+    const hp = new Biquad('hp', 1800), bp = new Biquad('bp', 3300 * p, 3), bp2 = new Biquad('bp', 1100 * p, 2);
+    let pk = 0;
+    for (let i = 0; i < o.length; i++) {
+      const t = i / SR;
+      const e = Math.exp(-t / 0.0012) + (t >= 0.032 ? Math.exp(-(t - 0.032) / 0.0009) * 0.3 : 0);
+      const x = noise() * e;
+      o[i] = hp.run(x) * 0.6 + bp.run(x) * 2.2 + bp2.run(x) * 1.2;
+      pk = Math.max(pk, Math.abs(o[i]));
+    }
+    for (let i = 0; i < o.length; i++) o[i] /= pk;
     return { m: o };
   },
   tap() {
@@ -206,33 +216,50 @@ const G = {
   },
 };
 
-let missing = new Set();
-for (const c of cues) {
-  const gen = G[c.name];
-  if (!gen) { missing.add(c.name); continue; }
-  const res = gen(c);
-  const s0 = Math.round(c.t * SR);
-  if (res.m) {
-    const pos = c.pan != null && c.name !== 'whoosh' ? c.pan * 0.5 : (rnd() - 0.5) * 0.4;
-    const a = (pos + 1) * Math.PI / 4, gl = Math.cos(a) * Math.SQRT2, gr = Math.sin(a) * Math.SQRT2;
-    for (let i = 0; i < res.m.length; i++) { L[s0 + i] += res.m[i] * c.gain * gl; Rt[s0 + i] += res.m[i] * c.gain * gr; }
-  } else {
-    for (let i = 0; i < res.l.length; i++) { L[s0 + i] += res.l[i] * c.gain; Rt[s0 + i] += res.r[i] * c.gain; }
+// Two tracks: the main SFX bed (unchanged balance) and a clicks track where every former
+// "pop" cue is a click at unit gain, so the track's volume in the mix is the click level.
+const CLICK_CUES = new Set(['pop', 'click']);
+const missing = new Set();
+function renderTrack(list, forceGain) {
+  const Lb = new Float32Array(N + SR * 2), Rb = new Float32Array(N + SR * 2);
+  for (const c of list) {
+    const gen = G[c.name];
+    if (!gen) { missing.add(c.name); continue; }
+    const res = gen(c), gain = forceGain ?? c.gain;
+    const s0 = Math.round(c.t * SR);
+    if (res.m) {
+      const pos = c.pan != null && c.name !== 'whoosh' ? c.pan * 0.5 : (rnd() - 0.5) * 0.4;
+      const a = (pos + 1) * Math.PI / 4, gl = Math.cos(a) * Math.SQRT2, gr = Math.sin(a) * Math.SQRT2;
+      for (let i = 0; i < res.m.length; i++) { Lb[s0 + i] += res.m[i] * gain * gl; Rb[s0 + i] += res.m[i] * gain * gr; }
+    } else {
+      for (let i = 0; i < res.l.length; i++) { Lb[s0 + i] += res.l[i] * gain; Rb[s0 + i] += res.r[i] * gain; }
+    }
   }
+  return [Lb, Rb];
 }
+function writeWav(file, Lb, Rb, scale) {
+  let peak = 0;
+  for (let i = 0; i < N; i++) { const f = Math.min(1, (N - i) / (0.03 * SR)); Lb[i] *= f * scale; Rb[i] *= f * scale; peak = Math.max(peak, Math.abs(Lb[i]), Math.abs(Rb[i])); }
+  const sc = peak > 1 ? 1 / peak : 1;
+  const buf = Buffer.alloc(44 + N * 6);
+  buf.write('RIFF', 0); buf.writeUInt32LE(36 + N * 6, 4); buf.write('WAVE', 8); buf.write('fmt ', 12);
+  buf.writeUInt32LE(16, 16); buf.writeUInt16LE(1, 20); buf.writeUInt16LE(2, 22); buf.writeUInt32LE(SR, 24); buf.writeUInt32LE(SR * 6, 28); buf.writeUInt16LE(6, 32); buf.writeUInt16LE(24, 34);
+  buf.write('data', 36); buf.writeUInt32LE(N * 6, 40);
+  for (let i = 0; i < N; i++) {
+    buf.writeIntLE(Math.round(Math.max(-1, Math.min(1, Lb[i] * sc)) * 8388607), 44 + i * 6, 3);
+    buf.writeIntLE(Math.round(Math.max(-1, Math.min(1, Rb[i] * sc)) * 8388607), 47 + i * 6, 3);
+  }
+  fs.writeFileSync(file, buf);
+  console.log(`${file}: peak=${peak.toFixed(3)} limitScale=${sc.toFixed(3)}`);
+}
+const [mL, mR] = renderTrack(cues.filter((c) => !CLICK_CUES.has(c.name)));
+writeWav(OUT, mL, mR, 0.847); // same master scale as the approved first mix
+const clickCues = [];
+for (const c of cues.filter((x) => CLICK_CUES.has(x.name)).sort((a, b) => a.t - b.t)) {
+  if (clickCues.length && c.t - clickCues[clickCues.length - 1].t < 0.045) continue; // merge simultaneous clicks
+  clickCues.push(Object.assign({}, c, { name: 'click', pan: 0 }));
+}
+console.log(`clicks: ${clickCues.length}`);
+const [cL, cR] = renderTrack(clickCues, 1);
+writeWav(OUT.replace(/\.wav$/, '') + '_clicks.wav', cL, cR, 1);
 if (missing.size) console.log('missing generators:', [...missing]);
-
-// write 24-bit stereo WAV (trimmed to DUR, 30ms fade at the end)
-let peak = 0;
-for (let i = 0; i < N; i++) { const f = Math.min(1, (N - i) / (0.03 * SR)); L[i] *= f; Rt[i] *= f; peak = Math.max(peak, Math.abs(L[i]), Math.abs(Rt[i])); }
-const buf = Buffer.alloc(44 + N * 6);
-buf.write('RIFF', 0); buf.writeUInt32LE(36 + N * 6, 4); buf.write('WAVE', 8); buf.write('fmt ', 12);
-buf.writeUInt32LE(16, 16); buf.writeUInt16LE(1, 20); buf.writeUInt16LE(2, 22); buf.writeUInt32LE(SR, 24); buf.writeUInt32LE(SR * 6, 28); buf.writeUInt16LE(6, 32); buf.writeUInt16LE(24, 34);
-buf.write('data', 36); buf.writeUInt32LE(N * 6, 40);
-const sc = peak > 0.98 ? 0.98 / peak : 1;
-for (let i = 0; i < N; i++) {
-  buf.writeIntLE(Math.round(Math.max(-1, Math.min(1, L[i] * sc)) * 8388607), 44 + i * 6, 3);
-  buf.writeIntLE(Math.round(Math.max(-1, Math.min(1, Rt[i] * sc)) * 8388607), 47 + i * 6, 3);
-}
-fs.writeFileSync(OUT, buf);
-console.log(`cues=${cues.length} peak=${peak.toFixed(3)} scaled=${sc.toFixed(3)} -> ${OUT}`);

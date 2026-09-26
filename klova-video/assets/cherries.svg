@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 560" width="1280" height="1120">
+<defs>
+ <radialGradient id="r" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ff6b6b"/><stop offset=".6" stop-color="#d7263d"/><stop offset="1" stop-color="#8e1b2b"/></radialGradient>
+ <radialGradient id="d" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#c0394b"/><stop offset=".6" stop-color="#8e1b2b"/><stop offset="1" stop-color="#4f0f18"/></radialGradient>
+ <radialGradient id="y" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#e9f58a"/><stop offset=".6" stop-color="#b5cf3a"/><stop offset="1" stop-color="#6f8a1c"/></radialGradient>
+ <linearGradient id="l" x1="0" x2="1"><stop offset="0" stop-color="#3f8f46"/><stop offset="1" stop-color="#1f5e2c"/></linearGradient>
+</defs>
+<g stroke="#1a1410" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M20 470 C 180 400, 330 330, 620 120" fill="none" stroke-width="22"/>
+ <path d="M20 470 C 180 400, 330 330, 620 120" fill="none" stroke="#7a4a2a" stroke-width="12"/>
+ <path d="M150 420 C 90 320, 130 230, 230 200 C 250 300, 230 380, 150 420 Z" fill="url(#l)"/>
+ <path d="M150 420 C 170 330, 200 260, 230 200" fill="none" stroke-width="4" stroke="#123d1b"/>
+ <path d="M300 350 C 330 470, 440 520, 540 480 C 500 390, 410 340, 300 350 Z" fill="url(#l)"/>
+ <path d="M300 350 C 390 390, 470 440, 540 480" fill="none" stroke-width="4" stroke="#123d1b"/>
+ <path d="M470 210 C 420 110, 460 30, 560 10 C 580 110, 560 180, 470 210 Z" fill="url(#l)"/>
+ <path d="M470 210 C 500 140, 530 70, 560 10" fill="none" stroke-width="4" stroke="#123d1b"/>
+ <path d="M560 160 C 610 240, 600 320, 520 340 C 500 270, 510 200, 560 160 Z" fill="url(#l)"/>
+ <circle cx="250" cy="352" r="40" fill="url(#r)"/><circle cx="318" cy="318" r="42" fill="url(#d)"/>
+ <circle cx="282" cy="410" r="38" fill="url(#r)"/><circle cx="210" cy="300" r="34" fill="url(#y)"/>
+ <circle cx="410" cy="262" r="40" fill="url(#r)"/><circle cx="462" cy="230" r="36" fill="url(#d)"/>
+ <circle cx="440" cy="310" r="36" fill="url(#r)"/><circle cx="370" cy="300" r="30" fill="url(#y)"/>
+</g>
+<g fill="#fff" opacity=".5"><ellipse cx="236" cy="338" rx="9" ry="6"/><ellipse cx="304" cy="302" rx="9" ry="6"/><ellipse cx="270" cy="396" rx="8" ry="5"/><ellipse cx="396" cy="248" rx="9" ry="6"/><ellipse cx="428" cy="296" rx="8" ry="5"/><ellipse cx="450" cy="218" rx="8" ry="5"/></g>
+</svg>

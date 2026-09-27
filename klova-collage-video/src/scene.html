@@ -1,0 +1,43 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="fonts.css">
+<style>
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#C8A274}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden}
+.world{position:absolute;left:0;top:0;transform-origin:0 0}
+.bg{position:absolute;background:url(../assets/kraft.jpg);background-size:2048px 2048px}
+.screen{position:absolute;inset:0}
+.overlay{position:absolute;left:0;top:0;width:1080px;height:1920px;pointer-events:none}
+.grain{mix-blend-mode:overlay;opacity:.13}
+.stain{position:absolute}
+.item,.stamp,.sticker,.doodle,.phrase{position:absolute}
+.item{transform-origin:50% 50%}
+.cardbody{position:absolute;left:0;top:0}
+.cardbody svg{display:block}
+.decor{position:absolute;z-index:-1}
+.tape{position:absolute;background:url(../assets/tape.png);background-size:256px;opacity:.82;transform-origin:0 50%;z-index:3;
+  box-shadow:inset 0 0 0 100px rgba(255,250,235,.12)}
+.stamp{-webkit-mask-image:url(../assets/grunge.png);-webkit-mask-size:320px;mix-blend-mode:multiply;transform-origin:50% 50%}
+.stamp.clean{-webkit-mask-image:url(../assets/grunge_light.png);mix-blend-mode:normal;filter:drop-shadow(2px 4px 3px rgba(46,27,18,.3))}
+.sticker{filter:drop-shadow(3px 6px 5px rgba(46,27,18,.35));transform-origin:50% 50%}
+.sticker svg,.stamp svg{display:block}
+.phrase{direction:rtl;filter:drop-shadow(3px 6px 4px rgba(46,27,18,.38));transform-origin:50% 0}
+.row{display:flex;flex-direction:row;justify-content:center;align-items:center;white-space:nowrap}
+.word{display:inline-block;font-family:Lalezar;line-height:1.12;padding:.16em .34em .1em;background-size:512px;transform-origin:50% 60%}
+.hookpaper{width:1000px;height:340px;background:url(../assets/paper_cream.jpg);background-size:600px;display:flex;flex-direction:column;align-items:center;justify-content:center;direction:rtl;font-family:Lalezar;color:#2E1B12}
+.hl1{font-size:122px;line-height:1.05}
+.hl2{font-size:122px;line-height:1.05}
+.hl2 span{background:#C2502F;color:#FBF7EE;padding:0 .18em;display:inline-block;transform:rotate(-2deg);clip-path:polygon(0 4%,100% 0,98% 96%,2% 100%)}
+.receipt{background:url(../assets/paper_white.jpg);background-size:400px;padding:26px 24px;box-sizing:border-box;font-family:'Noto Kufi Arabic';color:#3a2a20;direction:rtl}
+.rhead{font-family:'Special Elite';font-size:26px;text-align:center;letter-spacing:2px;direction:ltr}
+.rsep{font-family:'Special Elite';font-size:18px;text-align:center;opacity:.6;margin:6px 0;direction:ltr}
+.rline{display:flex;justify-content:space-between;font-size:21px;font-weight:600;margin:9px 0}
+.rline .dots{opacity:.4;letter-spacing:1px;direction:ltr}
+.rtot{font-size:26px;font-weight:700;text-align:center;margin-top:10px}.rtot b{color:#C2502F}
+.rbar{margin:18px auto 0;width:200px;height:44px;background:repeating-linear-gradient(90deg,#3a2a20 0 3px,transparent 3px 6px,#3a2a20 6px 7px,transparent 7px 11px)}
+.ticket{width:100%;height:100%;background:#DFA43A;clip-path:polygon(0 0,100% 0,100% 38%,96% 50%,100% 62%,100% 100%,0 100%,0 62%,4% 50%,0 38%);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Special Elite';color:#2E1B12;border:0}
+.ticket.alt{background:#8C9A6B;color:#FBF7EE}
+.tk1{font-size:40px;letter-spacing:4px}.tk2{font-size:22px;letter-spacing:3px;margin-top:4px}.tk3{font-size:18px;opacity:.7;margin-top:4px}
+.note{width:100%;height:100%;background:url(../assets/paper_cream.jpg);background-size:500px;clip-path:polygon(0 3%,20% 0,45% 2%,70% 0,100% 2%,99% 30%,100% 60%,98% 100%,70% 98%,40% 100%,12% 97%,0 100%,2% 60%);display:flex;flex-direction:column;align-items:center;justify-content:center;direction:rtl;font-family:'Aref Ruqaa Ink';font-size:64px;line-height:1.25;color:#2E1B12;text-align:center}
+.note span{color:#C2502F;font-size:54px}
+</style>
+<script src="illus.js"></script></head><body><div id="stage"></div>
+<script src="scene.js"></script></body></html>

@@ -1,0 +1,532 @@
+[
+{
+"t": -0.14,
+"name": "whoosh",
+"gain": 0.8
+},
+{
+"t": 0.1,
+"name": "pop_big",
+"gain": 0.8
+},
+{
+"t": 0.18,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 0.39,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 0.7,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 1.07,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 1.29,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 1.3,
+"name": "pop_hi",
+"gain": 0.9
+},
+{
+"t": 1.31,
+"name": "pop",
+"gain": 0.9
+},
+{
+"t": 1.95,
+"name": "whoosh",
+"gain": 0.9
+},
+{
+"t": 2.0,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 2.18,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 2.77,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 2.77,
+"name": "boom",
+"gain": 0.9
+},
+{
+"t": 3.42,
+"name": "pop_big",
+"gain": 1.0
+},
+{
+"t": 3.47,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 3.8,
+"name": "sparkle",
+"gain": 0.8
+},
+{
+"t": 3.8,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 4.62,
+"name": "whoosh",
+"gain": 0.9
+},
+{
+"t": 4.67,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 5.01,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 5.51,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 5.68,
+"name": "pop",
+"gain": 1.0
+},
+{
+"t": 5.68,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 6.29,
+"name": "pop_hi",
+"gain": 0.7
+},
+{
+"t": 6.29,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 7.18,
+"name": "whoosh",
+"gain": 0.9
+},
+{
+"t": 7.26,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 8.06,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 8.36,
+"name": "buzzer",
+"gain": 0.9
+},
+{
+"t": 8.36,
+"name": "stamp",
+"gain": 1.0
+},
+{
+"t": 8.36,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 8.66,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 8.72,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 9.68,
+"name": "pop_big",
+"gain": 1.0
+},
+{
+"t": 9.68,
+"name": "swish",
+"gain": 0.7
+},
+{
+"t": 9.79,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 10.51,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 10.75,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 11.17,
+"name": "ding",
+"gain": 0.8
+},
+{
+"t": 11.17,
+"name": "stamp",
+"gain": 0.7
+},
+{
+"t": 11.17,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 11.82,
+"name": "whoosh",
+"gain": 0.9
+},
+{
+"t": 11.9,
+"name": "pop",
+"gain": 0.8
+},
+{
+"t": 11.91,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 12.24,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 12.96,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 13.19,
+"name": "stamp",
+"gain": 0.9
+},
+{
+"t": 13.19,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 13.46,
+"name": "stamp",
+"gain": 0.9
+},
+{
+"t": 13.46,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 13.83,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 13.85,
+"name": "stamp",
+"gain": 0.9
+},
+{
+"t": 14.13,
+"name": "stamp",
+"gain": 0.9
+},
+{
+"t": 14.13,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 14.41,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 14.55,
+"name": "stamp",
+"gain": 0.9
+},
+{
+"t": 14.61,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 15.22,
+"name": "pop_big",
+"gain": 0.9
+},
+{
+"t": 15.3,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 15.4,
+"name": "pop",
+"gain": 0.9
+},
+{
+"t": 15.4,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 15.74,
+"name": "pop_hi",
+"gain": 0.9
+},
+{
+"t": 15.74,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 15.93,
+"name": "pop",
+"gain": 0.9
+},
+{
+"t": 15.93,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 16.03,
+"name": "sparkle",
+"gain": 0.6
+},
+{
+"t": 16.62,
+"name": "whoosh",
+"gain": 0.9
+},
+{
+"t": 16.71,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 16.74,
+"name": "swish",
+"gain": 0.7
+},
+{
+"t": 17.01,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 17.04,
+"name": "print",
+"gain": 0.6
+},
+{
+"t": 17.23,
+"name": "kaching",
+"gain": 0.85
+},
+{
+"t": 17.23,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 17.24,
+"name": "print",
+"gain": 0.6
+},
+{
+"t": 17.44,
+"name": "print",
+"gain": 0.6
+},
+{
+"t": 17.44,
+"name": "stamp",
+"gain": 0.8
+},
+{
+"t": 17.44,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 17.5,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 17.64,
+"name": "print",
+"gain": 0.6
+},
+{
+"t": 17.77,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 17.84,
+"name": "print",
+"gain": 0.6
+},
+{
+"t": 17.91,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 18.04,
+"name": "print",
+"gain": 0.6
+},
+{
+"t": 18.72,
+"name": "pop_big",
+"gain": 0.9
+},
+{
+"t": 18.72,
+"name": "swish",
+"gain": 0.6
+},
+{
+"t": 18.86,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 19.26,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 19.41,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 19.76,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 19.9,
+"name": "riser",
+"gain": 0.5
+},
+{
+"t": 19.94,
+"name": "bloop",
+"gain": 0.9
+},
+{
+"t": 19.94,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 19.99,
+"name": "sparkle",
+"gain": 0.7
+},
+{
+"t": 20.4,
+"name": "pop_big",
+"gain": 1.0
+},
+{
+"t": 20.4,
+"name": "whoosh",
+"gain": 0.7
+},
+{
+"t": 20.64,
+"name": "pop_hi",
+"gain": 0.55
+},
+{
+"t": 20.75,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 20.76,
+"name": "pop_hi",
+"gain": 0.55
+},
+{
+"t": 20.88,
+"name": "pop_hi",
+"gain": 0.55
+},
+{
+"t": 21.0,
+"name": "pop_hi",
+"gain": 0.55
+},
+{
+"t": 21.15,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 21.48,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 21.54,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 21.99,
+"name": "tick",
+"gain": 0.35
+},
+{
+"t": 22.04,
+"name": "ding",
+"gain": 0.6
+}
+]

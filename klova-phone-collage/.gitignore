@@ -1,0 +1,5 @@
+src/preview/
+src/video_noaudio.mp4
+src/mix*.wav
+src/render.log
+__pycache__/

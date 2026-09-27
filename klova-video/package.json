@@ -1,0 +1,11 @@
+{
+  "name": "klova-collage-video",
+  "private": true,
+  "description": "KLOVA TikTok collage motion graphic (9:16, 20.8s)",
+  "dependencies": {
+    "@iconify-json/fluent-emoji": "1.2.7",
+    "flag-icons": "7.5.0",
+    "gsap": "3.15.0",
+    "playwright-core": "1.63.0"
+  }
+}

@@ -86,7 +86,7 @@ def cutout(im, border=12, bcol=PAPER, shadow=(9, 14, 10, 0.38), rough=3.0, seed=
     arr = np.asarray(obj, np.float32)
     a = arr[..., 3] / 255.0
     if texture:
-        tex = 1 + 0.05 * smooth_noise(H, W, 30, rng) + rng.normal(0, 0.03, (H, W)).astype(np.float32)
+        tex = 1 + 0.022 * smooth_noise(H, W, 30, rng) + rng.normal(0, 0.025, (H, W)).astype(np.float32)
         arr[..., :3] *= tex[..., None]
     if border > 0:
         dist = ndimage.distance_transform_edt(a < 0.5)
@@ -160,7 +160,7 @@ def word_sprite(text, style='paper', size=130, fontname='Lalezar', seed=0, padx=
         d = ImageDraw.Draw(im)
         strokecol = ESP if col in (PAPER, YELLOW) else PAPER
         d.text((pad - l, pad - t), text, font=f, fill=col + (255,), direction='rtl', language='ar', stroke_width=sw, stroke_fill=strokecol + (255,))
-        out = cutout(im, border=0, rough=0, seed=seed, shadow=(8, 12, 8, 0.4) if shadow else None)
+        out = cutout(im, border=0, rough=0, seed=seed, shadow=(8, 12, 8, 0.4) if shadow else None, texture=False)
     else:
         bg, fg = STYLES[style]
         px = padx if padx is not None else int(size * 0.28)
@@ -175,7 +175,7 @@ def word_sprite(text, style='paper', size=130, fontname='Lalezar', seed=0, padx=
         tex.putalpha(mask)
         d = ImageDraw.Draw(tex)
         d.text((m + px - l, m + py - t), text, font=f, fill=fg + (255,), direction='rtl', language='ar')
-        out = cutout(tex, border=0, rough=0, seed=seed, shadow=(8, 12, 8, 0.4) if shadow else None)
+        out = cutout(tex, border=0, rough=0, seed=seed, shadow=(8, 12, 8, 0.4) if shadow else None, texture=False)
     out.save(p)
     return out
 
@@ -460,7 +460,7 @@ def dots_disc(r, color, cell=22, seed=0, falloff=1.0, angle=45):
 def torn_piece(w, h, color, seed=0, dark=False, shadow=True, jag=9):
     tex = paper_texture(w, h, color, seed=seed, dark=dark)
     tex.putalpha(torn_mask(w, h, seed=seed, jag=jag))
-    return cutout(tex, border=0, rough=0, shadow=(6, 10, 8, 0.3) if shadow else None, seed=seed)
+    return cutout(tex, border=0, rough=0, shadow=(6, 10, 8, 0.3) if shadow else None, seed=seed, texture=False)
 
 
 def grid_paper(w, h, seed=0):
@@ -469,7 +469,7 @@ def grid_paper(w, h, seed=0):
     for x in range(0, w, 34): d.line([(x, 0), (x, h)], fill=(120, 170, 190, 90), width=2)
     for y in range(0, h, 34): d.line([(0, y), (w, y)], fill=(120, 170, 190, 90), width=2)
     tex.putalpha(torn_mask(w, h, seed=seed))
-    return cutout(tex, border=0, rough=0, shadow=(6, 10, 8, 0.3), seed=seed)
+    return cutout(tex, border=0, rough=0, shadow=(6, 10, 8, 0.3), seed=seed, texture=False)
 
 
 def sunburst(S=2000, n=24, color=CREAM, alpha=26):
@@ -500,6 +500,6 @@ def stamp_card(name, scale=1.0, seed=0):
     card = paper_texture(w + m * 2, h + m * 2, PAPER, seed=seed + 7)
     card.alpha_composite(ink, (m, m))
     card.putalpha(torn_mask(w + m * 2, h + m * 2, seed=seed, jag=7))
-    out = cutout(card, border=0, rough=0, shadow=(7, 11, 8, 0.35), seed=seed)
+    out = cutout(card, border=0, rough=0, shadow=(7, 11, 8, 0.35), seed=seed, texture=False)
     out.save(p)
     return out

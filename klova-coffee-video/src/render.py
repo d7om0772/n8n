@@ -603,12 +603,12 @@ def build():
     coin = load_asset('coin', border=8, seed=12, scale=0.5)
     rng = rng_for('coins')
     for k in range(7):
-        vx = rng.uniform(-700, 700); vy = rng.uniform(-1500, -900); spin = rng.uniform(-600, 600)
+        vx = rng.uniform(-900, 900); vy = rng.uniform(-900, -500); spin = rng.uniform(-600, 600)
 
         def cfn(lt, st, vx=vx, vy=vy, spin=spin):
-            st['x'] = 700 + vx * lt; st['y'] = 400 + vy * lt + 0.5 * 3600 * lt * lt; st['r'] = spin * lt
-        s9.add(coin, 700, 400, t=15.0 - LEAD, anim='none', z=30, fn=cfn, until=16.2)
-    sfx(14.97, 'kaching', 0.9); shake(15.0, 8)
+            st['x'] = 330 + vx * lt; st['y'] = 470 + vy * lt + 0.5 * 4200 * lt * lt; st['r'] = spin * lt
+        s9.add(coin, 330, 470, t=15.0 - LEAD, anim='none', z=5, fn=cfn, until=15.95)
+    sfx(14.97, 'kaching', 1.3); shake(15.0, 8)
     cup = load_asset('tcup', border=12, seed=13, scale=0.40)
     for k, (x, y, r, tt) in enumerate([(430, 1455, -8, 15.95), (600, 1440, 5, 16.02), (760, 1460, -4, 16.09), (330, 1330, 7, 16.16), (510, 1300, -6, 16.23), (690, 1320, 8, 16.30)]):
         s9.add(cup, x, y, r=r, t=tt, anim='pop', z=8 - (k // 3), spin=20)

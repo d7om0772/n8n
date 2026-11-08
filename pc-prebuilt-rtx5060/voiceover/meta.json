@@ -1,0 +1,12 @@
+{
+  "take1": {
+    "model": "gemini-3.8-flash-tts",
+    "mimeType": "audio/wav",
+    "duration_seconds": 34.16
+  },
+  "take2": {
+    "model": "gemini-3.8-flash-tts",
+    "mimeType": "audio/wav",
+    "duration_seconds": 38.72
+  }
+}

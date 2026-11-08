@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>prebuilt vs custom</title>
+<style>
+@font-face{font-family:H;src:url(fonts/Rubik[wght].ttf);font-weight:300 900}
+@font-face{font-family:B;src:url(fonts/ReadexPro[HEXP,wght].ttf);font-weight:160 700}
+@font-face{font-family:M;src:url(fonts/JetBrainsMono[wght].ttf);font-weight:100 800}
+:root{--paper:#ECEAE5;--ink:#121212;--red:#E5262A;--gray:#8E8C87;--line:#D6D3CC}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:var(--paper);font-family:B;color:var(--ink)}
+.scene{position:absolute;inset:0;display:none;overflow:hidden}
+.paper{background:var(--paper)}
+.dark{background:var(--ink);color:#fff}
+.redbg{background:var(--red);color:#fff}
+.abs{position:absolute}
+.full{position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover}
+.hl-wrap{position:absolute;right:90px;width:900px;text-align:right;font-family:H;font-weight:900;line-height:1.25}
+.w{display:inline-block;position:relative;margin-left:.22em;white-space:nowrap;will-change:transform}
+.w .bx{position:absolute;inset:.06em -.16em .02em -.16em;background:var(--red);border-radius:.09em;transform-origin:right center;z-index:0}
+.w .tx{position:relative;z-index:1}
+.w.hl .tx{color:#fff}
+.w.hl{margin-left:.36em;margin-right:.14em}
+.mono{font-family:M}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.07;mix-blend-mode:multiply;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>")}
+/* HUD */
+#hud{position:absolute;inset:0;pointer-events:none;z-index:50}
+#hud .chap{position:absolute;right:90px;top:150px;font-family:B;font-weight:600;font-size:26px;display:flex;gap:14px;align-items:center}
+#hud .chap .n{font-family:M;font-weight:700;font-size:24px}
+#hud .chap .dot{width:8px;height:8px;border-radius:50%;background:var(--red)}
+#hud .segs{position:absolute;left:90px;top:163px;display:flex;gap:9px;direction:ltr}
+#hud .seg{width:38px;height:6px;border-radius:3px;background:currentColor;opacity:.25;position:relative;overflow:hidden}
+#hud .seg i{position:absolute;inset:0;background:var(--red);transform-origin:left;transform:scaleX(0)}
+#hud .side{position:absolute;left:34px;top:960px;transform:translate(-50%,-50%) rotate(-90deg);font-family:M;font-size:17px;letter-spacing:.32em;opacity:.45;white-space:nowrap;direction:ltr}
+/* wipe */
+.wipe{position:absolute;inset:0;z-index:40;transform:translateX(120%)}
+/* viewfinder */
+.vf{position:absolute;pointer-events:none}
+.vf b{position:absolute;width:56px;height:56px;border-color:currentColor;border-style:solid;border-width:0}
+.vf .tl{left:0;top:0;border-left-width:5px;border-top-width:5px}
+.vf .tr{right:0;top:0;border-right-width:5px;border-top-width:5px}
+.vf .bl{left:0;bottom:0;border-left-width:5px;border-bottom-width:5px}
+.vf .br{right:0;bottom:0;border-right-width:5px;border-bottom-width:5px}
+.rec{position:absolute;font-family:M;font-size:22px;font-weight:600;letter-spacing:.08em;direction:ltr;display:flex;align-items:center;gap:10px}
+.rec .d{width:16px;height:16px;border-radius:50%;background:var(--red)}
+/* parts list */
+.row{position:absolute;right:90px;width:900px;height:96px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid rgba(255,255,255,.12)}
+.row .r{display:flex;align-items:center;gap:26px}
+.row .idx{font-family:M;font-size:24px;color:var(--gray);width:44px}
+.row .nm{font-family:B;font-weight:600;font-size:44px}
+.row .ck{width:52px;height:52px;border-radius:12px;background:var(--red);display:flex;align-items:center;justify-content:center}
+/* phone */
+.phone{position:absolute;left:220px;top:600px;width:640px;height:1180px;border-radius:72px;background:#fff;border:16px solid var(--ink);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.18)}
+.phone .notch{position:absolute;left:50%;top:14px;width:170px;height:40px;border-radius:20px;background:var(--ink);transform:translateX(-50%)}
+.phone .time{position:absolute;left:44px;top:20px;font-family:M;font-weight:700;font-size:22px;direction:ltr}
+.search{position:absolute;left:28px;right:28px;top:84px;height:84px;border-radius:42px;background:#F1F0EC;display:flex;align-items:center;padding:0 28px;gap:18px;font-size:34px;font-weight:600}
+.caret{display:inline-block;width:3px;height:40px;background:var(--red);vertical-align:middle;margin-right:4px}
+.card{position:absolute;left:24px;right:24px;height:212px;border-radius:26px;background:#fff;border:2px solid #E6E3DC;display:flex;gap:20px;padding:14px;align-items:stretch}
+.card .th{width:236px;height:182px;border-radius:18px;overflow:hidden;flex:none;position:relative;background:#222}
+.card .th img{width:100%;height:100%;object-fit:cover}
+.card .info{flex:1;display:flex;flex-direction:column;gap:12px;padding-top:6px}
+.card .t{font-weight:700;font-size:32px}
+.chip{display:inline-flex;align-self:flex-start;font-family:M;font-weight:800;font-size:22px;padding:5px 14px;border-radius:10px;border:2.5px solid var(--red);color:var(--red);direction:ltr}
+.sk{height:14px;border-radius:7px;background:#ECEAE4}
+.price{font-family:H;font-weight:900;font-size:30px;color:var(--red)}
+.sticker{position:absolute;padding:18px 34px;border-radius:18px;background:var(--red);color:#fff;font-family:H;font-weight:900;font-size:78px;border:6px solid #fff;box-shadow:0 18px 40px rgba(0,0,0,.25);white-space:nowrap}
+/* spec sheet */
+.sheet{position:absolute;left:110px;width:860px;top:760px;height:640px;border-radius:30px;background:#fff;box-shadow:0 30px 80px rgba(0,0,0,.28);padding:40px 46px}
+.sheet .hd{display:flex;align-items:center;gap:18px;font-weight:700;font-size:44px;margin-bottom:22px}
+.srow{position:relative;display:flex;justify-content:space-between;align-items:center;height:104px;border-top:2px solid #EEECE6;font-size:36px;font-weight:600}
+.srow .v{display:flex;gap:10px;align-items:center;direction:ltr;font-family:M;font-weight:700;font-size:28px;color:#6d6b66}
+.srow .mk{position:absolute;inset:14px -16px;background:rgba(229,38,42,.14);border-radius:12px;transform-origin:right;transform:scaleX(0)}
+/* comments */
+.csheet{position:absolute;left:60px;width:870px;top:800px;height:670px;border-radius:40px;background:#fff;color:var(--ink);padding:34px 40px;box-shadow:0 30px 90px rgba(0,0,0,.45)}
+.cm{position:absolute;left:40px;right:40px;display:flex;gap:22px;align-items:flex-start}
+.av{width:78px;height:78px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-family:M;font-weight:800;font-size:26px}
+.cm .u{font-family:M;font-size:22px;color:var(--gray);direction:ltr;text-align:right}
+.cm .c{font-size:36px;font-weight:600;margin-top:4px}
+.input{position:absolute;left:30px;right:30px;bottom:30px;height:96px;border-radius:48px;background:#F1F0EC;display:flex;align-items:center;padding:0 16px 0 34px;font-size:34px;font-weight:600;justify-content:space-between}
+.send{width:70px;height:70px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.digit{display:inline-block;height:1.16em;overflow:hidden;vertical-align:top;line-height:1.16em}
+.digit span{display:block;height:1.16em;line-height:1.16em}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- ============ S1a: hook on footage ============ -->
+<div class="scene dark" id="s1a">
+  <img class="full vid" data-clip="hook" data-n="96" id="v_hook">
+  <div class="abs" style="inset:0;background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,.15) 35%,rgba(0,0,0,.25) 60%,rgba(0,0,0,.75) 100%)"></div>
+  <div class="vf" id="s1a_vf" style="left:60px;top:240px;width:960px;height:1300px;color:#fff"><b class="tl"></b><b class="tr"></b><b class="bl"></b><b class="br"></b></div>
+  <div class="rec" id="s1a_rec" style="left:100px;top:280px;color:#fff"><span class="d"></span>REC&nbsp;&nbsp;<span id="s1a_tc">00:00:00</span></div>
+  <div class="hl-wrap" id="h1" style="top:640px;color:#fff"></div>
+  <div class="abs" id="s1a_strike" style="right:70px;top:1088px;width:640px;height:16px;background:#fff;border-radius:8px;transform-origin:right center"></div>
+</div>
+
+<!-- ============ S1b: prices up ============ -->
+<div class="scene paper" id="s1b">
+  <div class="grain"></div>
+  <div class="hl-wrap" id="h2" style="top:300px;font-size:104px"></div>
+  <div class="abs" id="chart" style="left:90px;top:560px;width:900px;height:620px">
+    <svg width="900" height="620" viewBox="0 0 900 620" style="overflow:visible">
+      <g stroke="#D3D0C8" stroke-width="2">
+        <line x1="0" y1="100" x2="900" y2="100"/><line x1="0" y1="240" x2="900" y2="240"/><line x1="0" y1="380" x2="900" y2="380"/><line x1="0" y1="520" x2="900" y2="520"/>
+      </g>
+      <path id="chart_area" d="M0,500 L120,480 L220,488 L330,430 L430,446 L540,360 L640,372 L740,250 L820,190 L900,110 L900,520 L0,520 Z" fill="rgba(229,38,42,.12)"/>
+      <path id="chart_line" d="M0,500 L120,480 L220,488 L330,430 L430,446 L540,360 L640,372 L740,250 L820,190 L900,110" fill="none" stroke="#E5262A" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle id="chart_dot" cx="900" cy="110" r="22" fill="#E5262A"/>
+      <circle id="chart_ring" cx="900" cy="110" r="22" fill="none" stroke="#E5262A" stroke-width="4"/>
+      <g font-family="M" font-size="24" fill="#8E8C87" font-weight="600"><text x="0" y="575">2024</text><text x="420" y="575">2025</text><text x="860" y="575">2026</text></g>
+    </svg>
+    <div class="abs" id="chart_tag" style="right:-10px;top:-6px;transform:translate(0,-100%);background:var(--ink);color:#fff;font-family:B;font-weight:700;font-size:34px;padding:10px 22px;border-radius:14px;white-space:nowrap">أسعار القطع ↑</div>
+    <div class="abs mono" style="right:0;top:600px;font-size:22px;color:#8E8C87;font-weight:600">PRICE INDEX</div>
+  </div>
+  <div class="hl-wrap" id="h3" style="top:820px;font-size:120px;text-align:center;right:90px"></div>
+  <div class="abs" id="s1b_check" style="left:50%;top:1250px;width:150px;height:150px;margin-left:-75px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center">
+    <svg width="80" height="80" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+</div>
+
+<!-- ============ S2: piece by piece ============ -->
+<div class="scene dark" id="s2">
+  <div class="hl-wrap" id="h4" style="top:270px;font-size:100px;color:#fff"></div>
+  <div class="hl-wrap" id="h5" style="top:270px;font-size:100px;color:#fff"></div>
+  <div class="hl-wrap" id="h6" style="top:270px;font-size:100px;color:#fff"></div>
+  <div class="abs" id="s2_card" style="left:70px;top:470px;width:940px;height:693px;border-radius:30px;overflow:hidden">
+    <img class="vid" data-clip="rtx" data-n="135" id="v_rtx" style="width:940px;height:693px;display:block">
+    <div class="abs" style="inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,0) 30%,rgba(0,0,0,0) 70%,rgba(0,0,0,.45))"></div>
+    <div class="vf" style="left:34px;top:34px;right:34px;bottom:34px;color:#fff"><b class="tl"></b><b class="tr"></b><b class="bl"></b><b class="br"></b></div>
+    <div class="rec" style="left:70px;top:66px;color:#fff"><span class="d" id="s2_recdot"></span>REC&nbsp;&nbsp;GPU · LAYER 01</div>
+    <div class="rec" style="right:70px;bottom:66px;color:#fff;opacity:.85">4K · 30FPS</div>
+  </div>
+  <div class="abs" id="s2_rtx" style="left:0;right:0;top:1190px;text-align:center;font-family:H;font-weight:900;font-size:176px;line-height:1;direction:ltr;color:#fff;white-space:nowrap">
+    <span id="s2_rtxw" style="display:inline-block;height:1.16em;line-height:1.16em;vertical-align:top">RTX</span><span style="display:inline-block;width:.28em"></span><span id="s2_num" style="display:inline-block;height:1.16em;vertical-align:top"></span>
+  </div>
+  <div class="abs" id="s2_rtxbar" style="left:300px;width:480px;top:1388px;height:14px;border-radius:7px;background:var(--red);transform-origin:center"></div>
+  <div id="s2_rows"></div>
+  <div class="abs" id="s2_total" style="right:90px;width:900px;top:1230px;height:200px;display:flex;align-items:center;justify-content:space-between">
+    <div style="font-family:B;font-weight:600;font-size:40px;color:#bbb">المجموع</div>
+    <div style="display:flex;align-items:baseline;gap:18px;direction:ltr">
+      <span id="s2_cnt" style="font-family:H;font-weight:900;font-size:170px;line-height:1">0</span>
+      <span style="font-family:B;font-weight:700;font-size:48px;color:#fff" dir="rtl">ريال</span>
+    </div>
+  </div>
+  <div class="abs" id="s2_totbar" style="right:90px;width:900px;top:1440px;height:12px;border-radius:6px;background:var(--red);transform-origin:right"></div>
+</div>
+
+<!-- ============ S3: searching the store ============ -->
+<div class="scene paper" id="s3">
+  <div class="grain"></div>
+  <div class="hl-wrap" id="h7" style="top:250px;font-size:92px"></div>
+  <div class="phone" id="s3_phone">
+    <div class="notch"></div><div class="time">9:41</div>
+    <div class="search">
+      <svg width="40" height="40" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="#121212" stroke-width="2.6"/><path d="M15.5 15.5L21 21" stroke="#121212" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <span id="s3_q" style="white-space:nowrap"></span><span class="caret" id="s3_caret"></span>
+    </div>
+    <div class="abs mono" id="s3_res" style="right:34px;top:196px;font-size:22px;color:var(--gray);font-weight:600">RESULTS · النتائج</div>
+    <div class="card" id="s3_c1" style="top:240px"><div class="th"><img class="vid" data-clip="ready1" data-n="135" id="v_r1"></div><div class="info"><div class="t">تجميعة جاهزة</div><div class="chip">RTX 5060</div><div class="sk" style="width:86%"></div><div class="price" id="s3_p1"></div></div></div>
+    <div class="card" id="s3_c2" style="top:472px"><div class="th"><img class="vid" data-clip="ready2" data-n="135" id="v_r2"></div><div class="info"><div class="t">تجميعة جاهزة</div><div class="chip">RTX 5060</div><div class="sk" style="width:70%"></div><div class="price" id="s3_p2"></div></div></div>
+    <div class="card" id="s3_c4" style="top:936px"><div class="th"><img class="vid" data-clip="ready1" data-n="135" id="v_r4"></div><div class="info"><div class="t">تجميعة جاهزة</div><div class="chip">RTX 5060</div><div class="sk" style="width:64%"></div><div class="price" id="s3_p4"></div></div></div>
+    <div class="card" id="s3_c3" style="top:704px"><div class="th"><img class="vid" data-clip="ready3" data-n="136" id="v_r3"></div><div class="info"><div class="t">تجميعة جاهزة</div><div class="chip">RTX 5060</div><div class="sk" style="width:78%"></div><div class="price" id="s3_p3"></div></div></div>
+  </div>
+  <div class="sticker" id="s3_st" style="left:110px;top:1240px">أقل من 5,000 ريال</div>
+</div>
+
+<!-- ============ S4: DDR5 ============ -->
+<div class="scene dark" id="s4">
+  <img class="full vid" data-clip="ram" data-n="120" id="v_ram">
+  <div class="abs" style="inset:0;background:linear-gradient(180deg,rgba(10,10,10,.82) 0%,rgba(10,10,10,.35) 30%,rgba(10,10,10,.35) 55%,rgba(10,10,10,.9) 100%)"></div>
+  <div class="hl-wrap" id="h8" style="top:270px;font-size:96px;color:#fff"></div>
+  <div class="abs" id="s4_chip" style="left:140px;top:640px;width:800px;height:340px">
+    <svg width="800" height="340" viewBox="0 0 800 340" style="position:absolute;inset:0;overflow:visible">
+      <g id="s4_pins" fill="#fff"></g>
+      <rect id="s4_body" x="40" y="40" width="720" height="260" rx="34" fill="rgba(229,38,42,.92)" stroke="#fff" stroke-width="6"/>
+    </svg>
+    <div class="abs" id="s4_txt" style="inset:0;display:flex;align-items:center;justify-content:center;font-family:H;font-weight:900;font-size:236px;line-height:1;color:#fff;direction:ltr;letter-spacing:-.01em">DDR5</div>
+  </div>
+  <div class="abs" id="s4_price" style="left:90px;right:90px;top:1110px;height:300px;border-radius:36px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:space-between;padding:0 50px">
+    <div style="font-family:B;font-weight:700;font-size:56px">بحدود</div>
+    <div style="display:flex;align-items:baseline;gap:16px;direction:ltr">
+      <span style="font-family:H;font-weight:900;font-size:110px;color:var(--red)">≈</span>
+      <span id="s4_cnt" style="font-family:H;font-weight:900;font-size:160px;line-height:1">5,100</span>
+      <span style="font-family:B;font-weight:700;font-size:46px" dir="rtl">ريال</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ S5a: warning ============ -->
+<div class="scene redbg" id="s5a">
+  <div class="abs" id="s5_stripes" style="left:-400px;top:-400px;width:2000px;height:2800px;opacity:.12;background:repeating-linear-gradient(45deg,#000 0 60px,transparent 60px 120px)"></div>
+  <div class="abs" id="s5_tri" style="left:50%;top:560px;width:380px;height:340px;margin-left:-190px">
+    <svg width="380" height="340" viewBox="0 0 380 340"><path d="M190 18 L366 318 L14 318 Z" fill="#fff" stroke="#fff" stroke-width="22" stroke-linejoin="round"/><rect x="176" y="112" width="28" height="118" rx="14" fill="#E5262A"/><circle cx="190" cy="270" r="17" fill="#E5262A"/></svg>
+  </div>
+  <div class="hl-wrap" id="h9" style="top:1000px;font-size:170px;text-align:center;color:#fff"></div>
+</div>
+
+<!-- ============ S5b: read the specs ============ -->
+<div class="scene paper" id="s5b">
+  <div class="grain"></div>
+  <div class="hl-wrap" id="h10" style="top:260px;font-size:92px"></div>
+  <div class="hl-wrap" id="h11" style="top:260px;font-size:92px"></div>
+  <div class="hl-wrap" id="h12" style="top:260px;font-size:92px"></div>
+  <div class="abs" id="s5_card" style="left:108px;top:520px;width:864px;height:950px;border-radius:30px;overflow:hidden;background:#222">
+    <img class="vid" data-clip="board" data-n="156" id="v_board" style="width:864px;height:990px;display:block;object-fit:cover">
+    <div class="vf" style="left:30px;top:30px;right:30px;bottom:30px;color:#fff"><b class="tl"></b><b class="tr"></b><b class="bl"></b><b class="br"></b></div>
+    <div class="rec" style="left:64px;top:60px;color:#fff"><span class="d"></span>INSPECT · MOTHERBOARD</div>
+  </div>
+  <!-- callouts -->
+  <div class="abs" id="co1" style="left:250px;top:930px">
+    <div class="abs" id="co1_ring" style="left:-46px;top:-46px;width:92px;height:92px;border-radius:50%;border:6px solid #fff;box-shadow:0 0 0 6px rgba(229,38,42,.9)"></div>
+    <div class="abs" id="co1_line" style="left:46px;top:-3px;width:170px;height:6px;background:#fff;transform-origin:left"></div>
+    <div class="abs" id="co1_lbl" style="left:216px;top:-40px;background:#fff;color:var(--ink);font-family:B;font-weight:700;font-size:40px;padding:10px 24px;border-radius:14px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.25)">لوحة بسيطة</div>
+  </div>
+  <div class="abs" id="co2" style="left:440px;top:1150px">
+    <div class="abs" id="co2_ring" style="left:-46px;top:-46px;width:92px;height:92px;border-radius:50%;border:6px solid #fff;box-shadow:0 0 0 6px rgba(229,38,42,.9)"></div>
+    <div class="abs" id="co2_line" style="left:46px;top:-3px;width:110px;height:6px;background:#fff;transform-origin:left"></div>
+    <div class="abs" id="co2_lbl" style="left:156px;top:-40px;background:var(--red);color:#fff;font-family:B;font-weight:700;font-size:40px;padding:10px 24px;border-radius:14px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;gap:14px;align-items:center">رامات أقدم <span class="mono" style="font-size:28px;background:#fff;color:var(--red);padding:2px 10px;border-radius:8px">DDR4</span></div>
+  </div>
+  <div class="sheet" id="s5_sheet">
+    <div class="hd">
+      <svg width="54" height="54" viewBox="0 0 24 24"><path d="M6 2.5h8l4.5 4.5V21a.5.5 0 0 1-.5.5H6a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z" fill="none" stroke="#121212" stroke-width="1.8"/><path d="M8.5 11h7M8.5 14.5h7M8.5 18h4.5" stroke="#E5262A" stroke-width="1.8" stroke-linecap="round"/></svg>
+      المواصفات
+    </div>
+    <div class="srow" id="sr1"><div class="mk"></div><span style="position:relative">اللوحة الأم</span><span class="v" style="position:relative"><span class="sk" style="width:190px;display:inline-block"></span></span></div>
+    <div class="srow" id="sr2"><div class="mk"></div><span style="position:relative">الرامات</span><span class="v" style="position:relative">DDR4 / DDR5</span></div>
+    <div class="srow" id="sr3"><div class="mk"></div><span style="position:relative">كرت الشاشة</span><span class="v" style="position:relative">RTX 5060</span></div>
+    <div class="srow" id="sr4"><div class="mk"></div><span style="position:relative">الباور</span><span class="v" style="position:relative"><span class="sk" style="width:150px;display:inline-block"></span></span></div>
+    <div class="abs" id="s5_mag" style="left:70px;top:180px;width:120px;height:120px">
+      <svg width="120" height="120" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.2" fill="rgba(255,255,255,.35)" stroke="#E5262A" stroke-width="2.4"/><path d="M14.7 14.7L21 21" stroke="#E5262A" stroke-width="3" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- ============ S6: savings ============ -->
+<div class="scene dark" id="s6">
+  <div class="hl-wrap" id="h13" style="top:250px;font-size:94px;color:#fff"></div>
+  <div class="hl-wrap" id="h14" style="top:250px;font-size:94px;color:#fff"></div>
+  <div class="abs" id="s6_chart" style="right:90px;width:900px;top:640px;height:560px">
+    <div class="abs" style="right:0;top:0;font-family:B;font-weight:600;font-size:38px;color:#c9c7c2">تجميع قطعة قطعة</div>
+    <div class="abs" id="bar1" style="right:0;top:64px;width:840px;height:120px;border-radius:18px;background:#EDEBE6;transform-origin:right"></div>
+    <div class="abs" id="bar1v" style="right:600px;top:64px;width:220px;height:120px;display:flex;align-items:center;justify-content:center;font-family:H;font-weight:900;font-size:62px;color:var(--ink);direction:ltr">6,000</div>
+    <div class="abs" style="right:0;top:240px;font-family:B;font-weight:600;font-size:38px;color:#c9c7c2">تجميعة جاهزة</div>
+    <div class="abs" id="bar2" style="right:0;top:304px;width:700px;height:120px;border-radius:18px;background:var(--red);transform-origin:right"></div>
+    <div class="abs" id="bar2v" style="right:470px;top:304px;width:220px;height:120px;display:flex;align-items:center;justify-content:center;font-family:H;font-weight:900;font-size:62px;color:#fff;direction:ltr">~5,000</div>
+    <!-- ruler -->
+    <div class="abs" id="ruler" style="left:60px;top:200px;width:140px;height:250px">
+      <div class="abs" style="left:0;top:0;width:3px;height:250px;background:repeating-linear-gradient(180deg,#fff 0 10px,transparent 10px 18px)"></div>
+      <div class="abs" style="right:0;top:0;width:3px;height:250px;background:repeating-linear-gradient(180deg,#fff 0 10px,transparent 10px 18px)"></div>
+      <div class="abs" id="ruler_bar" style="left:0;right:0;top:268px;height:5px;background:var(--red)"></div>
+      <div class="abs" style="left:-2px;top:256px;width:5px;height:30px;background:var(--red)"></div>
+      <div class="abs" style="right:-2px;top:256px;width:5px;height:30px;background:var(--red)"></div>
+    </div>
+  </div>
+  <div class="abs" id="s6_save" style="left:90px;right:90px;top:1150px;height:260px;display:flex;align-items:center;justify-content:space-between">
+    <div style="font-family:B;font-weight:700;font-size:52px;line-height:1.25">توفير<br><span style="color:#aaa;font-weight:500;font-size:40px">قريب</span></div>
+    <div style="display:flex;align-items:baseline;gap:16px;direction:ltr">
+      <span id="s6_cnt" style="font-family:H;font-weight:900;font-size:200px;line-height:1;color:var(--red)">1,000</span>
+      <span style="font-family:B;font-weight:700;font-size:52px" dir="rtl">ريال</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ S7: CTA ============ -->
+<div class="scene dark" id="s7">
+  <img class="full vid" data-clip="endpc" data-n="165" id="v_end">
+  <div class="abs" style="inset:0;background:linear-gradient(180deg,rgba(10,10,10,.85) 0%,rgba(10,10,10,.45) 32%,rgba(10,10,10,.55) 60%,rgba(10,10,10,.9) 100%)"></div>
+  <div class="hl-wrap" id="h15" style="top:250px;font-size:96px;color:#fff"></div>
+  <div class="hl-wrap" id="h16" style="top:250px;font-size:96px;color:#fff"></div>
+  <div class="csheet" id="s7_sheet">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:40px"><span>التعليقات</span><span class="mono" style="font-size:26px;color:var(--gray)">BUDGET?</span></div>
+    <div class="cm" id="cm1" style="top:120px"><div class="av" style="background:#121212">PC</div><div><div class="u">@gamer.sa</div><div class="c">ميزانيتي 4,000 ريال</div></div></div>
+    <div class="cm" id="cm2" style="top:262px"><div class="av" style="background:#E5262A">RX</div><div><div class="u">@build.ksa</div><div class="c">عندي 5,500 وش الأنسب؟</div></div></div>
+    <div class="cm" id="cm3" style="top:404px"><div class="av" style="background:#8E8C87">FPS</div><div><div class="u">@setup_92</div><div class="c">3,500 تكفي لتجميعة؟</div></div></div>
+    <div class="input" id="s7_input"><span><span id="s7_typed" style="white-space:nowrap"></span><span class="caret" id="s7_caret"></span></span>
+      <div class="send" id="s7_send"><svg width="36" height="36" viewBox="0 0 24 24"><path d="M20 12L5 4.5l2.5 7.5L5 19.5z" fill="#fff" transform="rotate(180 12 12)"/></svg></div>
+    </div>
+  </div>
+</div>
+
+<!-- transitions -->
+<div class="wipe" id="wipeA" style="background:var(--red)"></div>
+<div class="wipe" id="wipeB" style="background:var(--ink)"></div>
+<div class="abs" id="flash" style="inset:0;background:#fff;opacity:0;z-index:45"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="chap"><span class="n" id="hud_n">01</span><span class="dot"></span><span id="hud_l">الفكرة</span></div>
+  <div class="segs" id="hud_segs"></div>
+  <div class="side">PC BUILD VS PREBUILT · 2026</div>
+</div>
+</div>
+
+<script>
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const P=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3);
+const eo5=x=>1-Math.pow(1-x,5);
+const ei=x=>x*x*x;
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const eback=x=>{const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const lerp=(a,b,p)=>a+(b-a)*p;
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+function T(el,o){ // set transform/opacity
+  if(!el) return;
+  const tr=[];
+  if(o.x!==undefined||o.y!==undefined) tr.push(`translate(${o.x||0}px,${o.y||0}px)`);
+  if(o.s!==undefined) tr.push(`scale(${o.s})`);
+  if(o.sx!==undefined) tr.push(`scaleX(${o.sx})`);
+  if(o.sy!==undefined) tr.push(`scaleY(${o.sy})`);
+  if(o.r!==undefined) tr.push(`rotate(${o.r}deg)`);
+  el.style.transform=tr.join(' ');
+  if(o.o!==undefined) el.style.opacity=o.o;
+}
+
+/* ---------- headline builder ---------- */
+const HL={};
+function buildHL(id,lines){ // lines: [[ [text,at,hl?], ...], ...]
+  const box=$(id); const words=[];
+  lines.forEach((ln,li)=>{
+    const d=document.createElement('div');
+    if(ln.style) d.setAttribute('style',ln.style);
+    (ln.w||ln).forEach(([tx,at,hl,cls])=>{
+      const s=document.createElement('span'); s.className='w'+(hl?' hl':'')+(cls?' '+cls:'');
+      if(hl){const b=document.createElement('span');b.className='bx';s.appendChild(b);}
+      const t=document.createElement('span'); t.className='tx'; t.textContent=tx; s.appendChild(t);
+      d.appendChild(s); words.push({el:s,at,hl,bx:s.querySelector('.bx'),tx:t});
+    });
+    box.appendChild(d);
+  });
+  HL[id]={box,words};
+}
+function animHL(id,t,tin,tout){
+  const h=HL[id]; if(!h) return;
+  const outp=tout!==undefined?P(t,tout,tout+.22):0;
+  h.box.style.display=(t<tin-0.05||outp>=1)?'none':'block';
+  h.words.forEach((w,i)=>{
+    const p=P(t,w.at,w.at+.32), q=eback(p);
+    let y=(1-q)*70, o=clamp(p*2.2);
+    if(outp>0){const op=eio(clamp(outp*1.3-i*0.04)); y-=op*90; o*=1-op;}
+    T(w.el,{y,o});
+    if(w.hl){ const bp=eo(P(t,w.at,w.at+.24)); T(w.bx,{sx:bp}); w.tx.style.opacity=clamp(P(t,w.at+.04,w.at+.2)); }
+  });
+}
+
+/* ---------- headlines content (times = voice timeline) ---------- */
+buildHL('h1',[
+  {w:[['ما',0.08],['كنت',0.36],['أحب',0.62]],style:'font-size:100px'},
+  {w:[['التجميعات',0.86]],style:'font-size:150px;margin-top:6px'},
+  {w:[['الجاهزة',1.44,1]],style:'font-size:170px;margin-top:18px'}]);
+buildHL('h2',[{w:[['بس',2.28],['مع',2.6],['غلاء',2.76,1],['القطع',3.02]]}]);
+buildHL('h3',[{w:[['صارت',3.54],['خيار',3.88]],style:'font-size:116px'},{w:[['أذكى',4.22,1]],style:'font-size:210px;margin-top:20px'}]);
+buildHL('h4',[{w:[['جمّعت',5.19],['جهاز',5.5],['بكرت',5.78]]}]);
+buildHL('h5',[{w:[['قطعة',7.22],['قطعة',7.64,1]]}]);
+buildHL('h6',[{w:[['وطلع',8.17],['معي',8.56]]}]);
+buildHL('h7',[{w:[['بعدها',10.48],['دوّرت',10.82]]},{w:[['بأمازون',11.08,1],['السعودية',11.46,1]],style:'margin-top:14px'}]);
+buildHL('h8',[{w:[['وفيه',16.03],['خيارات',16.2],['برامات',16.6]]}]);
+buildHL('h9',[{w:[['بس',19.39],['انتبه!',19.56]]}]);
+buildHL('h10',[{w:[['أغلبها',20.11],['لوحاتها',20.56]]},{w:[['بسيطة',20.98,1]],style:'margin-top:10px'}]);
+buildHL('h11',[{w:[['وبعضها',21.64],['رامات',22.02]]},{w:[['أقدم',22.32,1]],style:'margin-top:10px'}]);
+buildHL('h12',[{w:[['فاقرا',23.03],['المواصفات',23.34,1]],style:'font-size:86px'},{w:[['قبل',23.98],['تشتري',24.18]],style:'font-size:86px;margin-top:4px'}]);
+buildHL('h13',[{w:[['يعني',25.06],['لو',25.28],['ناوي',25.4],['تشتري',25.6]]},{w:[['هالفترة',25.9,1]],style:'margin-top:10px'}]);
+buildHL('h14',[{w:[['الجاهز',26.57],['ممكن',27.12]]},{w:[['يوفّر',27.38,1],['عليك',27.72]],style:'margin-top:10px'}]);
+buildHL('h15',[{w:[['وإذا',29.43],['تبغى',29.6]]},{w:[['أختار',29.78],['لك',30.02],['الأنسب',30.18,1]],style:'margin-top:10px'}]);
+buildHL('h16',[{w:[['اكتب',30.74],['ميزانيتك',31.06,1]]},{w:[['بالتعليقات',31.52]],style:'margin-top:10px'}]);
+
+/* ---------- parts list ---------- */
+const PARTS=['كرت الشاشة','المعالج','اللوحة الأم','الرامات','التخزين SSD','الباور','الكيس والتبريد'];
+const rowsBox=$('s2_rows'); const ROWS=[];
+PARTS.forEach((n,i)=>{
+  const r=document.createElement('div'); r.className='row'; r.style.top=(470+i*104)+'px';
+  r.innerHTML=`<div class="r"><span class="idx mono">0${i+1}</span><span class="nm">${n}</span></div><div class="ck"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+  rowsBox.appendChild(r); ROWS.push({el:r,ck:r.querySelector('.ck'),at:7.22+i*0.17});
+});
+/* digit roller for 5060 */
+const numBox=$('s2_num'); const DIG=[];
+'5060'.split('').forEach((d,i)=>{const s=document.createElement('span');s.className='digit';const col=document.createElement('span');
+  let html=''; for(let k=0;k<=10;k++) html+=`<span>${(parseInt(d)+k+1)%10}</span>`; html+=`<span>${d}</span>`; col.innerHTML=html; s.appendChild(col); numBox.appendChild(s); DIG.push({col,at:6.42+i*0.04,n:12});});
+/* chip pins */
+(function(){const g=$('s4_pins');let h='';for(let i=0;i<14;i++){const x=70+i*48;h+=`<rect x="${x}" y="8" width="22" height="40" rx="5"/><rect x="${x}" y="292" width="22" height="40" rx="5"/>`;}g.innerHTML=h;})();
+/* hud segs */
+const segBox=$('hud_segs'); const SEGS=[];
+for(let i=0;i<7;i++){const s=document.createElement('div');s.className='seg';const f=document.createElement('i');s.appendChild(f);segBox.appendChild(s);SEGS.push(f);}
+const CHAP=[[0,5.0,'الفكرة'],[5.0,10.3,'التجميع'],[10.3,15.8,'البحث'],[15.8,19.2,'الرامات'],[19.2,24.8,'تنبيه'],[24.8,29.2,'الخلاصة'],[29.2,34.0,'دورك']];
+const SCENES=[['s1a',0,2.25,'d'],['s1b',2.25,5.0,'l'],['s2',5.0,10.3,'d'],['s3',10.3,15.8,'l'],['s4',15.8,19.2,'d'],['s5a',19.2,20.05,'r'],['s5b',20.05,24.8,'l'],['s6',24.8,29.2,'d'],['s7',29.2,34.1,'d']];
+const WIPES=[[2.25,'B'],[5.0,'A'],[10.3,'A'],[20.05,'B'],[24.8,'A'],[29.2,'A']];
+const FLASH=[15.8,19.2];
+
+/* ---------- video frames ---------- */
+const VID={hook:{el:$('v_hook'),t0:0},rtx:{el:$('v_rtx'),t0:5.3},r1:{el:$('v_r1'),t0:12.0,clip:'ready1'},r2:{el:$('v_r2'),t0:12.2,clip:'ready2'},r3:{el:$('v_r3'),t0:12.4,clip:'ready3'},r4:{el:$('v_r4'),t0:11.2,clip:'ready1'},ram:{el:$('v_ram'),t0:15.6},board:{el:$('v_board'),t0:19.9},end:{el:$('v_end'),t0:29.0,clip:'endpc'}};
+function setVid(key,t,visible){
+  const v=VID[key]; if(!visible) return null;
+  const el=v.el, clip=el.dataset.clip, n=parseInt(el.dataset.n);
+  let f=Math.floor((t-v.t0)*30); f=Math.max(0,Math.min(n-1,f));
+  const src=`frames/clips/${clip}/${String(f+1).padStart(4,'0')}.jpg`;
+  if(el.getAttribute('src')!==src){el.setAttribute('src',src); return el.decode().catch(()=>{});} return null;
+}
+
+function typeText(str,t,a,b){const n=Math.round(clamp((t-a)/(b-a))*str.length);return str.slice(0,n);}
+
+window.renderFrame=async function(t){
+  const waits=[];
+  // scenes visibility
+  let cur=null;
+  for(const [id,a,b,th] of SCENES){const vis=t>=a&&t<b;$(id).style.display=vis?'block':'none';if(vis)cur=th;}
+  // micro zoom of scene container
+  for(const [id,a,b] of SCENES){ if(t>=a&&t<b){ const p=P(t,a,b); $(id).style.transform=`scale(${1+0.02*p})`; } }
+
+  /* ===== S1a ===== */
+  if(t<2.3){
+    const v=setVid('hook',t,true); if(v) waits.push(v);
+    T($('v_hook'),{s:1.12+0.08*P(t,0,2.25)});
+    animHL('h1',t,0);
+    const sp=eio(P(t,1.78,2.05)); T($('s1a_strike'),{sx:sp,r:-3}); $('s1a_strike').style.opacity=sp>0?1:0;
+    $('s1a_tc').textContent='00:00:'+String(Math.floor(t*30)%30).padStart(2,'0');
+    $('s1a_rec').querySelector('.d').style.opacity=(Math.floor(t*2)%2)?.25:1;
+    const vfp=eo(P(t,0,.45)); T($('s1a_vf'),{s:1.08-0.08*vfp,o:vfp});
+  }
+  /* ===== S1b ===== */
+  if(t>=2.2&&t<5.05){
+    animHL('h2',t,2.25,3.45);
+    const cp=P(t,2.45,3.55), cpe=eio(cp);
+    const line=$('chart_line'); const L=1150; line.style.strokeDasharray=L; line.style.strokeDashoffset=L*(1-cpe);
+    $('chart_area').style.opacity=cpe*.9; $('chart_area').style.clipPath=`inset(0 ${100-cpe*100}% 0 0)`;
+    const dp=eback(P(t,3.45,3.7)); $('chart_dot').setAttribute('r',22*dp);
+    const rp=P(t,3.5,4.4)%1; $('chart_ring').setAttribute('r',22+rp*40); $('chart_ring').style.opacity=(t>3.5)?(1-rp):0;
+    T($('chart_tag'),{o:clamp(P(t,3.3,3.5)),y:(1-eback(P(t,3.3,3.6)))*30});
+    const chartOut=eio(P(t,3.5,3.85));
+    T($('chart'),{o:clamp(P(t,2.3,2.5))*(1-chartOut),y:(1-eo(P(t,2.25,2.6)))*80-chartOut*120,s:1-chartOut*.1});
+    animHL('h3',t,3.5);
+    const ck=eback(P(t,4.38,4.65)); T($('s1b_check'),{s:ck,o:clamp(ck),r:(1-ck)*-40});
+  }
+  /* ===== S2 ===== */
+  if(t>=4.95&&t<10.35){
+    animHL('h4',t,5.0,7.05); animHL('h5',t,7.15,8.05); animHL('h6',t,8.12);
+    const cin=eo(P(t,5.55,6.0)), cout=eio(P(t,7.08,7.34));
+    const card=$('s2_card');
+    if(cout<1){ const v=setVid('rtx',t,true); if(v) waits.push(v); }
+    card.style.clipPath=`inset(${(1-cin)*50}% 0 ${(1-cin)*50}% 0 round 30px)`;
+    T(card,{s:1.0+0.06*(1-cin)-0.08*cout,y:-cout*220,o:1-cout});
+    T($('v_rtx'),{s:1.04+0.06*P(t,5.5,7.3)});
+    $('s2_recdot').style.opacity=(Math.floor(t*2)%2)?.25:1;
+    const rw=P(t,6.1,6.3); T($('s2_rtxw'),{o:clamp(rw*2)}); $('s2_rtxw').style.display='inline-block';
+    T($('s2_rtx'),{o:(t>=6.05?1:0)*(1-cout),y:(1-eback(P(t,6.08,6.4)))*60-cout*260});
+    DIG.forEach(d=>{const p=eo5(P(t,d.at,d.at+.3)); d.col.style.transform=`translateY(${-p*(d.n-1)*1.16}em)`; d.col.parentNode.style.opacity=t>=d.at-0.02?1:0;});
+    T($('s2_rtxbar'),{sx:eo(P(t,6.7,7.0)),o:1-cout,y:-cout*260});
+    ROWS.forEach((r,i)=>{const p=eback(P(t,r.at,r.at+.3)); T(r.el,{o:clamp(P(t,r.at,r.at+.12)),x:(1-p)*-120}); T(r.ck,{s:eback(P(t,r.at+.1,r.at+.35))});});
+    const tin=eo(P(t,7.3,7.6)); T($('s2_total'),{o:tin,y:(1-tin)*60});
+    const cnt=eo(P(t,7.35,9.15)); $('s2_cnt').textContent=fmt(Math.round(cnt*6000/10)*10);
+    const lock=P(t,9.15,9.5); $('s2_cnt').style.color=t>=9.15?'#E5262A':'#fff'; T($('s2_cnt'),{s:1+0.12*Math.sin(Math.PI*lock)});
+    T($('s2_totbar'),{sx:eo(P(t,9.12,9.5))});
+  }
+  /* ===== S3 ===== */
+  if(t>=10.25&&t<15.85){
+    animHL('h7',t,10.3);
+    const ph=eo5(P(t,10.45,10.95)); T($('s3_phone'),{y:(1-ph)*900,r:(1-ph)*6});
+    $('s3_q').textContent=typeText('تجميعة RTX 5060',t,10.95,11.95);
+    $('s3_caret').style.opacity=(t<12.0||Math.floor(t*3)%2)?1:0;
+    $('s3_res').style.opacity=clamp(P(t,12.05,12.25));
+    ['s3_c1','s3_c2','s3_c3','s3_c4'].forEach((id,i)=>{const a=12.2+i*0.26;const p=eback(P(t,a,a+.35)); T($(id),{o:clamp(P(t,a,a+.12)),y:(1-p)*80,s:.94+.06*p});});
+    ['r1','r2','r3','r4'].forEach((k,i)=>{ if(t>=12.1+i*0.26){const v=setVid(k,t,true); if(v) waits.push(v);} });
+    // same card highlight
+    document.querySelectorAll('#s3 .chip').forEach((c,i)=>{const on=t>=13.82+i*0.08; c.style.background=on?'#E5262A':'transparent'; c.style.color=on?'#fff':'#E5262A'; T(c,{s:1+0.18*Math.sin(Math.PI*P(t,13.82+i*0.08,14.12+i*0.08))});});
+    ['s3_p1','s3_p2','s3_p3','s3_p4'].forEach((id,i)=>{$(id).textContent=t>=14.55+i*0.1?'أقل من 5,000 ر.س':'';});
+    const st=P(t,15.12,15.36); const sp=eback(st); T($('s3_st'),{s:lerp(2.2,1,sp),r:-6,o:clamp(st*3)});
+    T($('s3_phone'),{y:(1-ph)*900,r:(1-ph)*6,s:1-0.03*eo(P(t,15.1,15.4))});
+  }
+  /* ===== S4 ===== */
+  if(t>=15.75&&t<19.25){
+    const v=setVid('ram',t,true); if(v) waits.push(v);
+    T($('v_ram'),{s:1.06+0.1*P(t,15.8,19.2)});
+    animHL('h8',t,15.85);
+    const sl=P(t,16.98,17.3); const sp=eback(sl);
+    T($('s4_chip'),{s:lerp(1.9,1,sp),o:clamp(sl*4)});
+    const g=t>=16.98&&t<17.25; const gx=g?(Math.sin(t*240)*10):0;
+    $('s4_txt').style.textShadow=g?`${gx}px 0 0 rgba(0,255,255,.85), ${-gx}px 0 0 rgba(255,0,60,.85)`:'none';
+    T($('s4_txt'),{x:g?Math.sin(t*300)*6:0});
+    const pin=P(t,17.7,18.0); T($('s4_price'),{o:eo(pin),y:(1-eo(pin))*80});
+    const c=eo(P(t,17.75,18.7)); $('s4_cnt').textContent=fmt(Math.round(lerp(0,5100,c)/10)*10);
+    T($('s4_cnt'),{s:1+0.1*Math.sin(Math.PI*P(t,18.65,18.95))});
+  }
+  /* ===== S5a ===== */
+  if(t>=19.15&&t<20.1){
+    T($('s5_stripes'),{x:-((t-19.2)*160)%170});
+    const tp=eback(P(t,19.22,19.5)); const sh=t>19.5&&t<19.95?Math.sin(t*70)*7:0;
+    T($('s5_tri'),{s:tp,r:sh});
+    animHL('h9',t,19.25);
+  }
+  /* ===== S5b ===== */
+  if(t>=20.0&&t<24.85){
+    animHL('h10',t,20.05,21.45); animHL('h11',t,21.6,22.9); animHL('h12',t,23.0);
+    const v=setVid('board',t,true); if(v) waits.push(v);
+    const ci=eo(P(t,20.05,20.5)); const sheetIn=eo5(P(t,23.0,23.45));
+    T($('s5_card'),{y:(1-ci)*120,o:ci,s:1-0.05*sheetIn});
+    $('s5_card').style.filter=`brightness(${1-0.45*sheetIn})`;
+    T($('v_board'),{s:1.05+0.08*P(t,20,24.8)});
+    const c1=P(t,20.75,21.05), c1o=P(t,22.95,23.1);
+    T($('co1_ring'),{s:eback(c1),o:clamp(c1*3)*(1-c1o)}); T($('co1_line'),{sx:eo(P(t,20.85,21.05)),o:1-c1o}); T($('co1_lbl'),{o:clamp(P(t,20.98,21.1))*(1-c1o),x:(1-eback(P(t,20.98,21.25)))*-30});
+    const c2=P(t,22.15,22.45);
+    T($('co2_ring'),{s:eback(c2),o:clamp(c2*3)*(1-c1o)}); T($('co2_line'),{sx:eo(P(t,22.25,22.45)),o:1-c1o}); T($('co2_lbl'),{o:clamp(P(t,22.35,22.5))*(1-c1o),x:(1-eback(P(t,22.35,22.6)))*-30});
+    // pulse rings
+    const pr=(t*1.6)%1; $('co1_ring').style.boxShadow=`0 0 0 ${6+pr*14}px rgba(229,38,42,${.9*(1-pr)})`; $('co2_ring').style.boxShadow=`0 0 0 ${6+pr*14}px rgba(229,38,42,${.9*(1-pr)})`;
+    T($('s5_sheet'),{y:(1-sheetIn)*1200,r:(1-sheetIn)*4,o:t>=23.0?1:0});
+    const mp=eio(P(t,23.45,24.45)); T($('s5_mag'),{x:lerp(0,40,Math.sin(mp*Math.PI)),y:mp*330});
+    ['sr1','sr2','sr3','sr4'].forEach((id,i)=>{T($(id).querySelector('.mk'),{sx:eo(P(t,23.5+i*0.25,23.75+i*0.25))});});
+  }
+  /* ===== S6 ===== */
+  if(t>=24.75&&t<29.25){
+    animHL('h13',t,24.85,26.4); animHL('h14',t,26.5);
+    const ci=eo(P(t,24.9,25.3)); T($('s6_chart'),{o:ci,y:(1-ci)*60});
+    const b1=eio(P(t,25.1,25.9)), b2=eio(P(t,26.6,27.3));
+    T($('bar1'),{sx:b1}); T($('bar1v'),{o:clamp(P(t,25.7,25.9))});
+    T($('bar2'),{sx:b2}); T($('bar2v'),{o:clamp(P(t,27.1,27.3))});
+    const rr=P(t,28.0,28.3); T($('ruler'),{o:clamp(rr*3),sy:eo(rr)}); $('ruler').style.transformOrigin='top';
+    const sv=P(t,28.0,28.35); T($('s6_save'),{o:eo(sv),y:(1-eo(sv))*70});
+    const c=eo(P(t,28.05,28.6)); $('s6_cnt').textContent=fmt(Math.round(c*1000/10)*10);
+    T($('s6_cnt'),{s:1+0.12*Math.sin(Math.PI*P(t,28.55,28.9))});
+  }
+  /* ===== S7 ===== */
+  if(t>=29.15){
+    const v=setVid('end',t,true); if(v) waits.push(v);
+    T($('v_end'),{s:1.08+0.08*P(t,29.2,34)});
+    animHL('h15',t,29.3,30.55); animHL('h16',t,30.62);
+    const si=eo5(P(t,30.55,31.0)); T($('s7_sheet'),{y:(1-si)*1300,o:t>=30.5?1:0});
+    ['cm1','cm2','cm3'].forEach((id,i)=>{const a=31.0+i*0.32;const p=eback(P(t,a,a+.3)); T($(id),{o:clamp(P(t,a,a+.12)),x:(1-p)*60});});
+    $('s7_typed').textContent=t<32.2?'':typeText('ميزانيتي 4,500 ريال',t,32.2,33.0);
+    $('s7_typed').style.color='#121212';
+    if(t<32.2){$('s7_typed').textContent='اكتب ميزانيتك…';$('s7_typed').style.color='#9a9892';}
+    $('s7_caret').style.opacity=(Math.floor(t*3)%2)?1:0;
+    const sp=P(t,33.1,33.45); T($('s7_send'),{s:1+0.25*Math.sin(Math.PI*sp)+0.06*Math.sin(t*8)*(t>31.5?1:0)});
+  }
+
+  /* ===== transitions ===== */
+  let wa=120,wb=120;
+  for(const [B,k] of WIPES){
+    const pin=P(t,B-0.2,B), pout=P(t,B,B+0.22);
+    if(t>=B-0.2&&t<B+0.22){
+      const x=t<B?lerp(100,0,eio(pin)):lerp(0,-100,eio(pout));
+      const x2=t<B?lerp(100,0,eio(clamp(pin*1.25-.25))):lerp(0,-100,eio(clamp(pout*1.25)));
+      if(k==='A'){wa=x;wb=x2;}else{wb=x;wa=x2;}
+    }
+  }
+  $('wipeA').style.transform=`translateX(${wa}%)`; $('wipeB').style.transform=`translateX(${wb}%)`;
+  let fo=0; for(const B of FLASH){ if(t>=B&&t<B+0.25) fo=Math.max(fo,(B>19?0.55:1)*(1-P(t,B,B+0.25))); }
+  $('flash').style.opacity=fo*0.85;
+
+  /* ===== HUD ===== */
+  let ci=0; CHAP.forEach((c,i)=>{if(t>=c[0])ci=i;});
+  $('hud_n').textContent='0'+(ci+1); $('hud_l').textContent=CHAP[ci][2];
+  SEGS.forEach((f,i)=>{let v=i<ci?1:(i===ci?P(t,CHAP[i][0],CHAP[i][1]):0); f.style.transform=`scaleX(${v})`;});
+  const hud=$('hud'); hud.style.color=(cur==='l')?'#121212':'#fff';
+  hud.querySelector('.dot').style.background=(cur==='r')?'#fff':'#E5262A';
+
+  await Promise.all(waits);
+  return true;
+};
+window.ready=document.fonts.ready.then(()=>true);
+</script>
+</body>
+</html>

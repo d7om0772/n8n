@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Prebuilt vs custom PC</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root{--bg:#F4F3F8;--ink:#0E0E13;--pur:#7C3AED;--pur-l:#EDE4FF;--gray:#8B8999;--dark:#0B0B10}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+body{font-family:'Rubik',sans-serif;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:var(--bg)}
+.scene{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:hidden;display:none;transform-origin:50% 50%}
+.bg-light{background-color:var(--bg);background-image:radial-gradient(circle,#DCD9E6 2.2px,transparent 2.7px);background-size:44px 44px;background-position:22px 22px}
+.bg-dark{background:var(--dark)}
+.line{position:absolute;left:0;width:1080px;display:flex;justify-content:center;align-items:baseline;gap:.26em;white-space:nowrap;direction:rtl;line-height:1.2}
+.m{display:inline-block;overflow:hidden;padding:.2em .08em .24em;margin:-.2em -.08em -.24em}
+.w{display:inline-block}
+.ltr{direction:ltr;unicode-bidi:isolate}
+.abs{position:absolute}
+.ctr{position:absolute;left:0;width:1080px;text-align:center;white-space:nowrap;line-height:1.2}
+img.foot{position:absolute;display:block;object-fit:cover}
+.pill{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-weight:700;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+'use strict';
+const W = 1080, H = 1920, FPS = 30, TOTAL = 35.0;
+const stage = document.getElementById('stage');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, p) => a + (b - a) * p;
+const E = {
+  lin: p => p,
+  out2: p => 1 - (1 - p) * (1 - p),
+  out3: p => 1 - Math.pow(1 - p, 3),
+  out5: p => 1 - Math.pow(1 - p, 5),
+  in3: p => p * p * p,
+  io3: p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2,
+  back: p => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); },
+};
+const P = (t, t0, d, e = E.out3) => e(clamp((t - t0) / d));
+function mk(tag, parent, css, html) {
+  const e = document.createElement(tag);
+  if (css) Object.assign(e.style, css);
+  if (html !== undefined) e.innerHTML = html;
+  parent.appendChild(e);
+  return e;
+}
+const st = (e, css) => Object.assign(e.style, css);
+const fmt = n => Math.round(n).toLocaleString('en-US');
+
+/* ---------- footage (pre-extracted 30 fps JPEG sequences, see shots.sh) ---------- */
+const SHOTS = {a_card:72,b_gpu:86,c_mobo:18,c_ram:18,c_fans:18,c_case:19,t_liquid:117,t_case:163,t_orange:162,d_ram:132,e_mobo:168,e_ram:168,g_fans:132};
+const foots = [];
+let building = null;
+function foot(name, parent, css, t0) {
+  const e = mk('img', parent, css);
+  e.className = 'foot';
+  foots.push({ e, name, t0, n: SHOTS[name], cur: -1, scene: building });
+  return e;
+}
+const fidx = (f, n) => { if (f <= 0) return 0; const per = 2 * (n - 1), m = f % per; return m < n ? m : per - m; };
+
+/* ---------- text helpers ---------- */
+function line(parent, y, size, weight, color, words, extra) {
+  const L = mk('div', parent, Object.assign({ top: y + 'px', fontSize: size + 'px', fontWeight: weight, color }, extra || {}));
+  L.className = 'line';
+  const ws = words.map(w => {
+    if (typeof w === 'string') w = { h: w };
+    const m = mk('span', L); m.className = 'm';
+    const s = mk('span', m, w.css || {}, w.h); s.className = 'w' + (w.ltr ? ' ltr' : '');
+    s.style.transform = 'translateY(120%)';
+    return s;
+  });
+  return { el: L, ws };
+}
+const rise = (w, p) => { w.style.transform = `translateY(${(1 - p) * 120}%)`; };
+function blurIn(e, p, s0 = 1.12) {
+  e.style.filter = p >= 1 ? 'none' : `blur(${(1 - p) * 26}px)`;
+  e.style.opacity = clamp(p * 1.5);
+  e.style.transform = `scale(${lerp(s0, 1, p)})`;
+}
+function pop(e, p, base = '') { e.style.transform = `${base} scale(${Math.max(0, p)})`; e.style.opacity = clamp(p * 3); }
+function riseWords(L, times, t, d = .38) { L.ws.forEach((w, i) => rise(w, P(t, times[i], d, E.out5))); }
+
+/* ---------- icons ---------- */
+const ICON = {
+  search: c => `<svg width="64" height="64" viewBox="0 0 64 64"><circle cx="27" cy="27" r="17" fill="none" stroke="${c}" stroke-width="7"/><line x1="40" y1="40" x2="56" y2="56" stroke="${c}" stroke-width="8" stroke-linecap="round"/></svg>`,
+  warn: (c, s = 200) => `<svg width="${s}" height="${s}" viewBox="0 0 100 100"><path d="M50 10 L92 86 L8 86 Z" fill="${c}" stroke="${c}" stroke-width="10" stroke-linejoin="round"/><rect x="45" y="34" width="10" height="30" rx="5" fill="#fff"/><circle cx="50" cy="74" r="6" fill="#fff"/></svg>`,
+  doc: c => `<svg width="120" height="120" viewBox="0 0 100 100"><rect x="18" y="8" width="64" height="84" rx="10" fill="none" stroke="${c}" stroke-width="7"/><line x1="32" y1="32" x2="68" y2="32" stroke="${c}" stroke-width="7" stroke-linecap="round"/><line x1="32" y1="50" x2="68" y2="50" stroke="${c}" stroke-width="7" stroke-linecap="round"/><line x1="32" y1="68" x2="54" y2="68" stroke="${c}" stroke-width="7" stroke-linecap="round"/></svg>`,
+  bubble: c => `<svg width="80" height="80" viewBox="0 0 100 100"><path d="M14 20 Q14 10 24 10 L76 10 Q86 10 86 20 L86 62 Q86 72 76 72 L44 72 L24 90 L26 72 L24 72 Q14 72 14 62 Z" fill="${c}"/><circle cx="34" cy="41" r="6" fill="#fff"/><circle cx="50" cy="41" r="6" fill="#fff"/><circle cx="66" cy="41" r="6" fill="#fff"/></svg>`,
+  down: c => `<svg width="110" height="110" viewBox="0 0 100 100"><path d="M50 12 L50 80 M22 54 L50 84 L78 54" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  send: c => `<svg width="48" height="48" viewBox="0 0 100 100"><path d="M86 50 L16 18 L28 50 L16 82 Z" fill="${c}" transform="rotate(180 50 50)"/></svg>`,
+};
+
+/* ---------- word timings (Whisper on voiceover take1) ---------- */
+// see timing.json; only the cue points used by the animation are listed here
+const scenes = [];
+function scene(def) {
+  const root = mk('div', stage); root.className = 'scene ' + (def.bg || 'bg-light');
+  def.root = root; building = def; def.build(root); building = null;
+  scenes.push(def);
+  return def;
+}
+
+/* ===== S1 0.00 hook: "ما كنت أحب التجميعات الجاهزة" ===== */
+scene({ a: 0, b: 2.02,
+  build(r) {
+    this.l1 = mk('div', r, { top: '300px', fontSize: '88px', fontWeight: 700, color: 'var(--ink)' }, 'ما كنت أحب'); this.l1.className = 'ctr';
+    this.l2 = line(r, 410, 156, 900, 'var(--ink)', ['التجميعات']);
+    this.l3 = line(r, 590, 156, 900, 'var(--pur)', ['الجاهزة']);
+    this.card = mk('div', r, { position: 'absolute', left: '100px', top: '870px', width: '880px', height: '660px', borderRadius: '44px', overflow: 'hidden', background: '#111', boxShadow: '0 30px 80px rgba(40,20,90,.28)' });
+    foot('a_card', this.card, { left: 0, top: 0, width: '880px', height: '660px' }, 0.95);
+    this.chip = mk('div', this.card, { position: 'absolute', right: '30px', bottom: '30px', background: 'rgba(255,255,255,.94)', color: 'var(--ink)', fontSize: '42px', padding: '16px 34px' }, 'تجميعة جاهزة');
+    this.chip.className = 'pill';
+  },
+  update(t) {
+    blurIn(this.l1, P(t, 0.0, 0.55, E.out3));
+    rise(this.l2.ws[0], P(t, 0.80, 0.42, E.out5));
+    rise(this.l3.ws[0], P(t, 1.30, 0.42, E.out5));
+    const c = P(t, 1.0, 0.6, E.out5), ins = (1 - c) * 50;
+    st(this.card, { clipPath: `inset(${ins}% ${ins}% ${ins}% ${ins}% round 44px)`, transform: `scale(${lerp(.82, 1, c)}) rotate(${lerp(-5, 0, c)}deg)` });
+    pop(this.chip, P(t, 1.45, .4, E.back));
+  } });
+
+/* ===== S2 2.02 "بس مع غلاء القطع" (light -> bold + chart) ===== */
+scene({ a: 2.02, b: 3.26, trans: 'slide',
+  build(r) {
+    this.l1 = line(r, 330, 84, 600, 'var(--gray)', ['بس', 'مع']);
+    this.big = mk('div', r, { top: '450px', fontSize: '184px', fontWeight: 300, color: 'var(--ink)' }, 'غلاء القطع'); this.big.className = 'ctr';
+    const pts = [[40, 520], [170, 470], [290, 495], [420, 380], [545, 405], [675, 245], [800, 110]];
+    let len = 0; for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    this.len = len;
+    const d = 'M' + pts.map(p => p.join(' ')).join(' L');
+    const ang = Math.atan2(pts[6][1] - pts[5][1], pts[6][0] - pts[5][0]) * 180 / Math.PI;
+    this.svg = mk('div', r, { position: 'absolute', left: '100px', top: '870px', width: '880px', height: '600px', direction: 'ltr' },
+      `<svg width="880" height="600" viewBox="0 0 880 600">
+        <defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7C3AED" stop-opacity=".28"/><stop offset="1" stop-color="#7C3AED" stop-opacity="0"/></linearGradient></defs>
+        ${[150, 280, 410, 540].map(y => `<line x1="20" y1="${y}" x2="860" y2="${y}" stroke="#DAD7E4" stroke-width="3" stroke-dasharray="10 12"/>`).join('')}
+        <path id="area" d="${d} L800 560 L40 560 Z" fill="url(#ga)" opacity="0"/>
+        <path id="ln" d="${d}" fill="none" stroke="#7C3AED" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${len}" stroke-dashoffset="${len}"/>
+        <g id="hd" transform="translate(800 110) rotate(${ang}) scale(0)"><path d="M-6 -30 L34 0 L-6 30 Z" fill="#7C3AED" stroke="#7C3AED" stroke-width="8" stroke-linejoin="round"/></g>
+      </svg>`);
+    this.ln = this.svg.querySelector('#ln'); this.area = this.svg.querySelector('#area'); this.hd = this.svg.querySelector('#hd'); this.ang = ang;
+    this.tag = mk('div', r, { position: 'absolute', right: '120px', top: '850px', background: 'var(--pur)', color: '#fff', fontSize: '44px', padding: '14px 32px' }, 'الأسعار ↑');
+    this.tag.className = 'pill';
+  },
+  update(t) {
+    riseWords(this.l1, [2.04, 2.22], t);
+    const wp = P(t, 2.30, .62, E.io3);
+    st(this.big, { fontWeight: Math.round(lerp(300, 900, wp)), opacity: P(t, 2.24, .18), transform: `scale(${lerp(.94, 1, P(t, 2.24, .5))})` });
+    const lp = P(t, 2.30, .85, E.io3);
+    this.ln.setAttribute('stroke-dashoffset', this.len * (1 - lp));
+    this.area.setAttribute('opacity', P(t, 2.7, .4));
+    const hp = P(t, 3.02, .25, E.back);
+    this.hd.setAttribute('transform', `translate(800 110) rotate(${this.ang}) scale(${Math.max(0, hp)})`);
+    pop(this.tag, P(t, 2.80, .35, E.back));
+  } });
+
+/* ===== S3 3.26 "صارت خيار  غلط -> أذكى" (word swap + highlight) ===== */
+scene({ a: 3.26, b: 4.98, trans: 'slide',
+  build(r) {
+    this.l1 = line(r, 560, 140, 800, 'var(--ink)', ['صارت', 'خيار']);
+    this.hl = mk('div', r, { position: 'absolute', left: '230px', width: '620px', top: '850px', height: '250px', background: 'var(--pur)', borderRadius: '40px', transformOrigin: '100% 50%', transform: 'scaleX(0)' });
+    this.slot = mk('div', r, { position: 'absolute', left: '0', width: '1080px', top: '820px', height: '310px', overflow: 'hidden' });
+    this.w1 = mk('div', this.slot, { top: '0', fontSize: '200px', fontWeight: 900, color: '#B5B2C3' }, 'غلط'); this.w1.className = 'ctr';
+    this.strike = mk('div', this.slot, { position: 'absolute', left: '340px', width: '400px', top: '150px', height: '16px', borderRadius: '8px', background: 'var(--ink)', transformOrigin: '100% 50%', transform: 'scaleX(0)' });
+    this.w2 = mk('div', this.slot, { top: '0', fontSize: '200px', fontWeight: 900, color: '#fff' }, 'أذكى'); this.w2.className = 'ctr';
+    this.sp = [-78, -48, -18].map(a => mk('div', r, { position: 'absolute', width: '14px', height: '58px', borderRadius: '7px', background: 'var(--pur)', left: '208px', top: '742px', transformOrigin: '50% calc(100% + 34px)', transform: `rotate(${a}deg) scaleY(0)` }));
+    this.spa = [-78, -48, -18];
+    this.sub = mk('div', r, { top: '1190px', fontSize: '54px', fontWeight: 600, color: 'var(--gray)' }, 'بدل ما تجمّع قطعة قطعة'); this.sub.className = 'ctr';
+  },
+  update(t) {
+    riseWords(this.l1, [3.28, 3.60], t);
+    const a = P(t, 3.62, .25, E.out5), sw = P(t, 3.98, .3, E.out5);
+    st(this.w1, { transform: `translateY(${(1 - a) * 100 - sw * 110}%)` });
+    st(this.w2, { transform: `translateY(${(1 - sw) * 110}%)` });
+    this.strike.style.transform = `scaleX(${P(t, 3.74, .2, E.out3) * (1 - sw)})`;
+    this.hl.style.transform = `scaleX(${P(t, 3.98, .3, E.out5)})`;
+    const sp = P(t, 4.22, .35, E.back);
+    this.sp.forEach((s, i) => st(s, { transform: `rotate(${this.spa[i]}deg) translateY(${-14 * sp}px) scaleY(${Math.max(0, sp)})`, opacity: clamp(sp * 2) }));
+    st(this.sub, { opacity: P(t, 4.35, .3) * 1 });
+  } });
+
+/* ===== S4 4.98 GPU footage: "جمّعت جهاز بكرت RTX 5060" (card reveal + outline->fill) ===== */
+scene({ a: 4.98, b: 7.52, trans: 'reveal', d: .42, bg: 'bg-dark',
+  build(r) {
+    this.img = foot('b_gpu', r, { left: 0, top: 0, width: '1080px', height: '1920px' }, 4.98);
+    mk('div', r, { position: 'absolute', inset: 0, background: 'linear-gradient(180deg,rgba(8,6,16,.75) 0%,rgba(8,6,16,.1) 26%,rgba(8,6,16,0) 58%,rgba(8,6,16,.82) 100%)' });
+    this.l1 = line(r, 250, 112, 800, '#fff', ['جمّعت', 'جهاز']);
+    this.chip = mk('div', r, { position: 'absolute', left: '440px', width: '200px', top: '1215px', height: '84px', background: '#fff', color: 'var(--pur)', fontSize: '46px' }, 'بكرت'); this.chip.className = 'pill';
+    this.rtx = mk('div', r, { top: '1310px', fontSize: '168px', fontWeight: 900, color: 'rgba(255,255,255,0)', webkitTextStroke: '5px #fff', direction: 'ltr' }, 'RTX 5060'); this.rtx.className = 'ctr';
+  },
+  update(t) {
+    this.img.style.transform = `scale(${lerp(1.0, 1.07, clamp((t - 4.98) / 2.6))})`;
+    riseWords(this.l1, [5.10, 5.40], t);
+    pop(this.chip, P(t, 5.70, .35, E.back));
+    const o = P(t, 6.12, .48, E.io3), f = P(t, 6.62, .28, E.out3);
+    st(this.rtx, { clipPath: `inset(-20% ${(1 - o) * 100}% -20% -5%)`, color: `rgba(255,255,255,${f})`,
+      textShadow: f > 0 ? `0 0 ${40 * f}px rgba(124,58,237,${.9 * f}), 0 8px 30px rgba(0,0,0,.5)` : 'none',
+      transform: `scale(${1 + .06 * Math.sin(Math.PI * P(t, 6.62, .3, E.lin))})` });
+  } });
+
+/* ===== S5 7.52 "قطعة قطعة" montage ===== */
+scene({ a: 7.52, b: 8.90, trans: 'cut', bg: 'bg-dark',
+  build(r) {
+    this.cuts = [['c_mobo', 7.52, 'اللوحة'], ['c_ram', 7.86, 'الرامات'], ['c_fans', 8.20, 'التبريد'], ['c_case', 8.54, 'الكيس']].map(([n, t0, label]) => ({ img: foot(n, r, { left: 0, top: 0, width: '1080px', height: '1920px' }, t0), t0, label }));
+    mk('div', r, { position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 50%,rgba(8,6,16,.25) 0%,rgba(8,6,16,.7) 100%)' });
+    this.q1 = mk('div', r, { top: '640px', fontSize: '220px', fontWeight: 900, color: '#fff', textShadow: '0 10px 40px rgba(0,0,0,.5)' }, 'قطعة'); this.q1.className = 'ctr';
+    this.q2 = mk('div', r, { top: '900px', fontSize: '220px', fontWeight: 900, color: 'rgba(255,255,255,0)', webkitTextStroke: '5px #fff' }, 'قطعة'); this.q2.className = 'ctr';
+    this.row = mk('div', r, { position: 'absolute', left: '90px', width: '900px', top: '1270px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '18px', direction: 'rtl' });
+    this.chips = this.cuts.map(c => { const e = mk('div', this.row, { background: 'rgba(255,255,255,.95)', color: 'var(--ink)', fontSize: '44px', padding: '16px 34px' }, c.label); e.className = 'pill'; return e; });
+    this.flash = mk('div', r, { position: 'absolute', inset: 0, background: '#fff', opacity: 0 });
+  },
+  update(t) {
+    let k = 0; this.cuts.forEach((c, i) => { if (t >= c.t0) k = i; });
+    this.cuts.forEach((c, i) => st(c.img, { display: i === k ? 'block' : 'none', transform: `scale(${lerp(1.14, 1.0, P(t, c.t0, .34, E.out3))})` }));
+    this.flash.style.opacity = .3 * (1 - P(t, this.cuts[k].t0, .12, E.lin));
+    pop(this.q1, P(t, 7.56, .3, E.back));
+    pop(this.q2, P(t, 8.14, .3, E.back));
+    this.q2.style.color = `rgba(124,58,237,${P(t, 8.30, .25)})`;
+    this.chips.forEach((c, i) => pop(c, P(t, this.cuts[i].t0 + .04, .3, E.back)));
+  } });
+
+/* ===== S6 8.90 "وطلع معي ستة آلاف ريال" (counter) ===== */
+scene({ a: 8.90, b: 11.38, trans: 'slide',
+  build(r) {
+    this.chip = mk('div', r, { position: 'absolute', left: '340px', width: '400px', top: '470px', height: '88px', border: '4px solid var(--pur)', color: 'var(--pur)', fontSize: '42px', background: 'var(--pur-l)' }, 'تجميع ذاتي'); this.chip.className = 'pill';
+    this.l1 = line(r, 590, 96, 700, 'var(--ink)', ['وطلع', 'معي']);
+    this.num = mk('div', r, { top: '760px', fontSize: '300px', fontWeight: 900, color: 'var(--ink)', direction: 'ltr', letterSpacing: '-6px' }, '0'); this.num.className = 'ctr';
+    this.bar = mk('div', r, { position: 'absolute', left: '200px', width: '680px', top: '1130px', height: '18px', borderRadius: '9px', background: 'var(--pur)', transformOrigin: '50% 50%', transform: 'scaleX(0)' });
+    this.cur = mk('div', r, { top: '1180px', fontSize: '160px', fontWeight: 800, color: 'var(--pur)' }, 'ريال'); this.cur.className = 'ctr';
+  },
+  update(t) {
+    pop(this.chip, P(t, 8.96, .35, E.back));
+    riseWords(this.l1, [8.96, 9.24], t);
+    const c = P(t, 9.62, .62, E.out2);
+    this.num.textContent = fmt(c >= 1 ? 6000 : Math.round(6000 * c / 50) * 50);
+    st(this.num, { opacity: P(t, 9.55, .12), transform: `scale(${1 + .07 * Math.sin(Math.PI * P(t, 10.24, .25, E.lin))})` });
+    this.bar.style.transform = `scaleX(${P(t, 10.20, .35, E.out5)})`;
+    pop(this.cur, P(t, 10.38, .35, E.back));
+  } });
+
+/* ===== S7 11.38 search (typing) + result cards (rise, highlight, price pop) ===== */
+scene({ a: 11.38, b: 16.58, trans: 'slide',
+  build(r) {
+    this.l1 = line(r, 210, 64, 600, 'var(--gray)', ['بعدها', 'دوّرت', 'في']);
+    this.l2 = line(r, 300, 116, 900, 'var(--ink)', ['أمازون', { h: 'السعودية', css: { color: 'var(--pur)' } }]);
+    this.bar = mk('div', r, { position: 'absolute', left: '100px', width: '880px', top: '520px', height: '136px', borderRadius: '68px', background: '#fff', border: '5px solid var(--ink)', boxShadow: '0 18px 50px rgba(40,20,90,.14)' });
+    this.ic = mk('div', this.bar, { position: 'absolute', left: '34px', top: '31px', width: '64px', height: '64px' }, ICON.search('#0E0E13'));
+    this.txt = mk('div', this.bar, { position: 'absolute', right: '46px', top: '26px', fontSize: '58px', fontWeight: 600, color: 'var(--ink)', whiteSpace: 'nowrap', direction: 'rtl', display: 'flex', alignItems: 'center' });
+    this.typed = mk('span', this.txt); this.caret = mk('span', this.txt, { display: 'inline-block', width: '6px', height: '66px', background: 'var(--pur)', marginRight: '6px', borderRadius: '3px' });
+    const thumbs = ['t_liquid', 't_case', 't_orange'];
+    this.cards = thumbs.map((n, i) => {
+      const c = mk('div', r, { position: 'absolute', left: '100px', width: '880px', top: `${720 + i * 250}px`, height: '226px', borderRadius: '34px', background: '#fff', boxShadow: '0 16px 44px rgba(40,20,90,.12)', overflow: 'hidden' });
+      const th = mk('div', c, { position: 'absolute', right: '16px', top: '16px', width: '262px', height: '194px', borderRadius: '24px', overflow: 'hidden', background: '#222' });
+      foot(n, th, { left: 0, top: 0, width: '262px', height: '194px' }, 13.0);
+      mk('div', c, { position: 'absolute', right: '306px', top: '30px', fontSize: '50px', fontWeight: 800, color: 'var(--ink)' }, 'تجميعة جاهزة');
+      const chip = mk('div', c, { position: 'absolute', right: '306px', top: '116px', height: '70px', padding: '0 26px', fontSize: '38px', background: '#EEEDF3', color: 'var(--ink)', direction: 'ltr' }, 'RTX 5060'); chip.className = 'pill';
+      const pr = mk('div', c, { position: 'absolute', left: '30px', top: '42px', textAlign: 'left', direction: 'rtl' },
+        `<div style="font-size:32px;font-weight:600;color:var(--gray);text-align:center">أقل من</div><div style="font-size:66px;font-weight:900;color:var(--pur);line-height:1.1;text-align:center"><span class="ltr">5,000</span></div><div style="font-size:30px;font-weight:700;color:var(--ink);text-align:center">ريال</div>`);
+      return { c, chip, pr };
+    });
+  },
+  update(t) {
+    riseWords(this.l1, [11.42, 11.60, 11.80], t);
+    riseWords(this.l2, [11.96, 12.28], t);
+    const b = P(t, 11.44, .35, E.out5);
+    st(this.bar, { opacity: b, transform: `translateY(${(1 - b) * 60}px) scale(${lerp(.92, 1, b)})`, borderColor: t > 12.95 && t < 13.25 ? 'var(--pur)' : 'var(--ink)' });
+    const full = 'تجميعة RTX 5060', tp = clamp((t - 11.62) / 1.28);
+    this.typed.textContent = full.slice(0, Math.round(full.length * tp));
+    this.caret.style.opacity = (tp < 1 || Math.floor(t * 2.6) % 2 === 0) ? 1 : 0;
+    this.cards.forEach((k, i) => {
+      const p = P(t, 13.0 + i * .14, .5, E.out5);
+      st(k.c, { opacity: clamp(p * 1.6), transform: `translateY(${(1 - p) * 300}px)` });
+      const h = P(t, 14.08 + i * .12, .2, E.out3);
+      st(k.chip, { background: h > .5 ? 'var(--pur)' : '#EEEDF3', color: h > .5 ? '#fff' : 'var(--ink)', transform: `scale(${1 + .12 * Math.sin(Math.PI * h)})` });
+      pop(k.pr, P(t, 15.20 + i * .12, .35, E.back));
+    });
+  } });
+
+/* ===== S8 16.58 RAM footage: "وفيه خيارات برامات DDR5 بحدود خمسة آلاف ومية" ===== */
+scene({ a: 16.58, b: 20.72, trans: 'zoom', bg: 'bg-dark',
+  build(r) {
+    this.img = foot('d_ram', r, { left: 0, top: 0, width: '1080px', height: '1920px' }, 16.58);
+    mk('div', r, { position: 'absolute', inset: 0, background: 'linear-gradient(180deg,rgba(8,6,16,.82) 0%,rgba(8,6,16,.35) 30%,rgba(8,6,16,.25) 55%,rgba(8,6,16,.85) 100%)' });
+    this.l1 = line(r, 220, 80, 600, 'rgba(255,255,255,.88)', ['وفيه', 'خيارات']);
+    this.l2 = line(r, 320, 130, 900, '#fff', ['برامات']);
+    this.ddr = mk('div', r, { top: '640px', fontSize: '300px', fontWeight: 900, color: 'rgba(255,255,255,0)', webkitTextStroke: '6px #fff', direction: 'ltr' }, 'DDR5'); this.ddr.className = 'ctr';
+    this.card = mk('div', r, { position: 'absolute', left: '140px', width: '800px', top: '1150px', height: '360px', borderRadius: '44px', background: 'rgba(255,255,255,.95)', boxShadow: '0 30px 80px rgba(0,0,0,.4)' });
+    this.lab = mk('div', this.card, { position: 'absolute', left: 0, width: '800px', top: '30px', textAlign: 'center', fontSize: '50px', fontWeight: 600, color: 'var(--gray)' }, 'بحدود');
+    this.price = mk('div', this.card, { position: 'absolute', left: 0, width: '800px', top: '100px', textAlign: 'center', fontSize: '150px', fontWeight: 300, color: 'var(--ink)', direction: 'ltr', whiteSpace: 'nowrap', lineHeight: 1.2 },
+      `5,<span style="display:inline-block;overflow:hidden;height:1.2em;vertical-align:top"><span class="roll" style="display:flex;flex-direction:column"><span>0</span><span style="color:var(--pur)">1</span></span></span>00`);
+    this.roll = this.price.querySelector('.roll');
+    this.cur = mk('div', this.card, { position: 'absolute', left: 0, width: '800px', top: '286px', textAlign: 'center', fontSize: '44px', fontWeight: 800, color: 'var(--pur)' }, 'ريال');
+  },
+  update(t) {
+    this.img.style.transform = `scale(${lerp(1.12, 1.0, P(t, 16.58, 4.1, E.out2))})`;
+    riseWords(this.l1, [16.70, 16.94], t);
+    riseWords(this.l2, [17.36], t);
+    const o = P(t, 17.70, .42, E.io3), f = P(t, 18.12, .3);
+    st(this.ddr, { clipPath: `inset(-20% ${(1 - o) * 100}% -20% -5%)`, color: `rgba(255,255,255,${f})`, textShadow: f > 0 ? `0 0 ${50 * f}px rgba(124,58,237,${f}), 0 10px 40px rgba(0,0,0,.6)` : 'none' });
+    const c = P(t, 18.48, .45, E.out5);
+    st(this.card, { opacity: clamp(c * 1.5), transform: `translateY(${(1 - c) * 240}px)` });
+    this.price.style.fontWeight = Math.round(lerp(300, 900, P(t, 19.10, .6, E.io3)));
+    this.price.style.opacity = P(t, 19.05, .15);
+    this.roll.style.transform = `translateY(${-50 * P(t, 19.86, .3, E.back)}%)`;
+    pop(this.cur, P(t, 19.95, .3, E.back));
+  } });
+
+/* ===== S9 20.72 "بس انتبه" warning, dark -> light, moving list ===== */
+scene({ a: 20.72, b: 26.14, trans: 'cut', flash: false, bg: 'bg-dark',
+  build(r) {
+    this.bgl = mk('div', r, { position: 'absolute', inset: 0, opacity: 0 }); this.bgl.className = 'bg-light';
+    this.icon = mk('div', r, { position: 'absolute', left: '440px', top: '420px', width: '200px', height: '200px' }, ICON.warn('#7C3AED'));
+    this.ttl = mk('div', r, { position: 'absolute', left: 0, width: '1080px', top: '680px', height: '300px', transformOrigin: '50% 0%' });
+    this.l1 = line(this.ttl, 0, 96, 700, 'rgba(255,255,255,.85)', ['بس']);
+    this.big = mk('div', this.ttl, { top: '110px', fontSize: '220px', fontWeight: 900, color: '#fff' }, 'انتبه'); this.big.className = 'ctr';
+    const items = [
+      { small: 'أغلبها', main: 'لوحاتها <span class="hw">بسيطة</span>', th: 'e_mobo' },
+      { small: 'وبعضها', main: 'رامات <span class="hw">أقدم</span>', th: 'e_ram' },
+      { small: 'فاقرا', main: 'المواصفات قبل تشتري', th: null },
+    ];
+    this.items = items.map((it, i) => {
+      const c = mk('div', r, { position: 'absolute', left: '100px', width: '880px', top: `${560 + i * 270}px`, height: '236px', borderRadius: '36px', background: '#fff', border: '5px solid transparent', boxShadow: '0 16px 44px rgba(40,20,90,.12)', overflow: 'hidden' });
+      const badge = mk('div', c, { position: 'absolute', right: '26px', top: '78px', width: '74px', height: '74px', borderRadius: '37px', background: '#E4E2EC', color: 'var(--ink)', fontSize: '40px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }, String(i + 1));
+      const th = mk('div', c, { position: 'absolute', right: '124px', top: '24px', width: '240px', height: '180px', borderRadius: '24px', overflow: 'hidden', background: '#F1EFF7', display: 'flex', alignItems: 'center', justifyContent: 'center' });
+      if (it.th) foot(it.th, th, { left: 0, top: 0, width: '240px', height: '180px' }, 21.5); else th.innerHTML = ICON.doc('#7C3AED');
+      const sm = mk('div', c, { position: 'absolute', right: '396px', top: '40px', fontSize: '40px', fontWeight: 600, color: 'var(--gray)' }, it.small);
+      const mn = mk('div', c, { position: 'absolute', right: '396px', top: '100px', fontSize: i === 2 ? '50px' : '66px', fontWeight: 900, color: 'var(--ink)', whiteSpace: 'nowrap' }, it.main);
+      return { c, badge, sm, mn, hw: mn.querySelector('.hw') };
+    });
+  },
+  update(t) {
+    const dl = P(t, 21.40, .4, E.io3);           // dark -> light
+    this.bgl.style.opacity = dl;
+    const ip = P(t, 20.76, .32, E.back);
+    st(this.icon, { transform: `scale(${Math.max(0, ip)}) rotate(${t < 21.4 ? 9 * Math.sin(t * 40) * (1 - P(t, 20.9, .5)) : 0}deg) translateY(${-dl * 300}px)`, opacity: 1 - dl });
+    rise(this.l1.ws[0], P(t, 20.80, .3, E.out5));
+    // glitch in on "انتبه"
+    const g = P(t, 20.92, .32, E.lin), on = t >= 20.92;
+    const fr = Math.floor(t * 30), jx = (fr * 37 % 11 - 5) * (1 - g) * 3;
+    st(this.big, { opacity: on ? 1 : 0, transform: `translateX(${jx}px)`,
+      textShadow: g < 1 && on ? `${8 * (1 - g)}px 0 rgba(255,40,90,.9), ${-8 * (1 - g)}px 0 rgba(40,220,255,.9)` : 'none',
+      color: `rgb(${lerp(255, 14, dl)},${lerp(255, 14, dl)},${lerp(255, 19, dl)})` });
+    this.l1.el.style.color = dl > .5 ? 'var(--gray)' : 'rgba(255,255,255,.85)';
+    st(this.ttl, { top: `${lerp(680, 180, dl)}px`, transform: `scale(${lerp(1, .62, dl)})` });
+    const starts = [21.56, 23.02, 24.42];
+    let act = 0; starts.forEach((s, i) => { if (t >= s) act = i; });
+    this.items.forEach((k, i) => {
+      const p = P(t, starts[i], .45, E.out5);
+      const isAct = i === act;
+      const done = i === 2 ? P(t, 24.66, .25) : 0;
+      st(k.c, { opacity: clamp(p * 1.5) * (isAct ? 1 : .55), transform: `translateX(${(1 - p) * -700}px)`, borderColor: isAct ? 'var(--pur)' : 'transparent', background: i === 2 && done > .5 ? 'var(--pur)' : '#fff' });
+      st(k.badge, { background: isAct ? 'var(--pur)' : '#E4E2EC', color: isAct ? '#fff' : 'var(--ink)' });
+      if (i === 2) { k.mn.style.color = done > .5 ? '#fff' : 'var(--ink)'; k.sm.style.color = done > .5 ? 'rgba(255,255,255,.8)' : 'var(--gray)'; k.badge.style.background = done > .5 ? '#fff' : k.badge.style.background; k.badge.style.color = done > .5 ? 'var(--pur)' : k.badge.style.color; }
+    });
+    const h1 = P(t, 22.30, .2), h2 = P(t, 23.86, .2);
+    st(this.items[0].hw, { color: h1 > .5 ? 'var(--pur)' : 'inherit' });
+    st(this.items[1].hw, { color: h2 > .5 ? 'var(--pur)' : 'inherit' });
+  } });
+
+/* ===== S10 26.14 "يعني لو ناوي تشتري هالفترة، الجاهز ممكن يوفّر عليك قريب ألف ريال" ===== */
+scene({ a: 26.14, b: 30.94, trans: 'slide',
+  build(r) {
+    this.l1 = line(r, 220, 80, 700, 'var(--ink)', ['يعني', 'لو', 'ناوي', 'تشتري']);
+    this.l2 = line(r, 320, 140, 900, 'var(--pur)', ['هالفترة']);
+    this.ul = mk('div', r, { position: 'absolute', left: '330px', width: '420px', top: '510px', height: '14px', borderRadius: '7px', background: 'var(--pur)', transformOrigin: '100% 50%', transform: 'scaleX(0)' });
+    const rows = [['تجميع ذاتي', 6000, 'var(--ink)', '6,000'], ['جاهز', 5000, 'var(--pur)', '&lt;5,000']];
+    this.rows = rows.map(([lab, v, col, txt], i) => {
+      const y = 620 + i * 200;
+      const l = mk('div', r, { position: 'absolute', right: '100px', top: `${y}px`, fontSize: '46px', fontWeight: 800, color: 'var(--ink)' }, lab);
+      const wpx = 880 * v / 6000;
+      const bar = mk('div', r, { position: 'absolute', right: '100px', top: `${y + 66}px`, width: `${wpx}px`, height: '96px', borderRadius: '24px', background: col, transformOrigin: '100% 50%', transform: 'scaleX(0)' });
+      const val = mk('div', bar, { position: 'absolute', left: '28px', top: '14px', fontSize: '54px', fontWeight: 900, color: '#fff', direction: 'ltr' }, txt);
+      return { l, bar, val };
+    });
+    this.diff = mk('div', r, { position: 'absolute', left: '100px', width: '147px', top: '886px', height: '96px', borderRadius: '24px', border: '5px dashed var(--pur)', background: 'rgba(124,58,237,.12)' });
+    this.dtag = mk('div', r, { position: 'absolute', left: '72px', width: '200px', top: '1000px', height: '70px', fontSize: '38px', background: 'var(--pur-l)', color: 'var(--pur)' }, 'الفرق'); this.dtag.className = 'pill';
+    this.save = mk('div', r, { position: 'absolute', left: '350px', width: '380px', top: '1110px', height: '86px', fontSize: '46px', background: 'var(--ink)', color: '#fff' }, 'توفير قريب'); this.save.className = 'pill';
+    this.hl = mk('div', r, { position: 'absolute', left: '170px', width: '740px', top: '1222px', height: '250px', borderRadius: '40px', background: 'var(--pur)', transformOrigin: '50% 50%', transform: 'scaleX(0)' });
+    this.num = mk('div', r, { top: '1206px', fontSize: '230px', fontWeight: 900, color: 'var(--ink)', direction: 'ltr', letterSpacing: '-4px' }, '0'); this.num.className = 'ctr';
+    this.cur = mk('div', r, { top: '1478px', fontSize: '96px', fontWeight: 800, color: 'var(--pur)' }, 'ريال'); this.cur.className = 'ctr';
+  },
+  update(t) {
+    riseWords(this.l1, [26.30, 26.84, 27.02, 27.24], t);
+    riseWords(this.l2, [27.50], t);
+    this.ul.style.transform = `scaleX(${P(t, 27.75, .35, E.out5)})`;
+    [[27.95, 28.0], [28.14, 28.2]].forEach(([a, b], i) => {
+      const k = this.rows[i];
+      k.l.style.opacity = P(t, a, .2);
+      k.bar.style.transform = `scaleX(${P(t, b, .5, E.out5)})`;
+      k.val.style.opacity = P(t, b + .35, .2);
+    });
+    const d = P(t, 28.94, .3, E.back);
+    st(this.diff, { opacity: clamp(d * 2), transform: `scale(${Math.max(0, d)})` });
+    pop(this.dtag, P(t, 29.05, .3, E.back));
+    pop(this.save, P(t, 29.25, .3, E.back));
+    const c = P(t, 29.44, .72, E.out2);
+    this.num.textContent = fmt(c >= 1 ? 1000 : Math.round(1000 * c / 10) * 10);
+    this.num.style.opacity = P(t, 29.40, .1);
+    const h = P(t, 30.22, .3, E.out5);
+    this.hl.style.transform = `scaleX(${h})`;
+    this.num.style.color = h > .4 ? '#fff' : 'var(--ink)';
+    pop(this.cur, P(t, 30.22, .3, E.back));
+  } });
+
+/* ===== S11 30.94 CTA: "وإذا تبغى أختار لك الأنسب، اكتب ميزانيتك بالتعليقات" ===== */
+scene({ a: 30.94, b: TOTAL + 1, trans: 'zoom', bg: 'bg-dark',
+  build(r) {
+    this.img = foot('g_fans', r, { left: 0, top: 0, width: '1080px', height: '1920px' }, 30.94);
+    mk('div', r, { position: 'absolute', inset: 0, background: 'linear-gradient(180deg,rgba(10,6,20,.78) 0%,rgba(10,6,20,.55) 45%,rgba(10,6,20,.85) 100%)' });
+    this.l1 = line(r, 200, 84, 600, 'rgba(255,255,255,.88)', ['وإذا', 'تبغى']);
+    this.b1 = mk('div', r, { top: '300px', fontSize: '150px', fontWeight: 900, color: '#fff' }, ''); this.b1.className = 'ctr';
+    this.hl = mk('div', r, { position: 'absolute', left: '250px', width: '580px', top: '505px', height: '220px', borderRadius: '40px', background: 'var(--pur)', transformOrigin: '100% 50%', transform: 'scaleX(0)' });
+    this.b2 = line(r, 500, 170, 900, '#fff', ['الأنسب']);
+    this.card = mk('div', r, { position: 'absolute', left: '100px', width: '880px', top: '840px', height: '380px', borderRadius: '44px', background: '#fff', boxShadow: '0 30px 90px rgba(0,0,0,.45)' });
+    mk('div', this.card, { position: 'absolute', right: '40px', top: '36px', width: '80px', height: '80px' }, ICON.bubble('#7C3AED'));
+    this.ttl = mk('div', this.card, { position: 'absolute', right: '140px', top: '30px', fontSize: '66px', fontWeight: 900, color: 'var(--ink)' }, 'اكتب ميزانيتك');
+    const inp = mk('div', this.card, { position: 'absolute', left: '36px', right: '36px', top: '160px', height: '128px', borderRadius: '64px', background: '#F1F0F6' });
+    this.typed = mk('div', inp, { position: 'absolute', right: '44px', top: '28px', fontSize: '54px', fontWeight: 600, color: 'var(--ink)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', direction: 'rtl' });
+    this.tx = mk('span', this.typed); this.caret = mk('span', this.typed, { display: 'inline-block', width: '6px', height: '62px', background: 'var(--pur)', marginRight: '6px', borderRadius: '3px' });
+    this.send = mk('div', inp, { position: 'absolute', left: '16px', top: '16px', width: '96px', height: '96px', borderRadius: '48px', background: 'var(--pur)', display: 'flex', alignItems: 'center', justifyContent: 'center' }, ICON.send('#fff'));
+    this.l3 = line(r, 1270, 130, 900, '#fff', ['بالتعليقات']);
+    this.arrow = mk('div', r, { position: 'absolute', left: '485px', top: '1450px', width: '110px', height: '110px' }, ICON.down('#7C3AED'));
+  },
+  update(t) {
+    this.img.style.transform = `scale(${lerp(1.0, 1.08, clamp((t - 30.94) / 4))})`;
+    riseWords(this.l1, [31.06, 31.26], t);
+    const s1 = 'أختار لك', n = Math.round(s1.length * clamp((t - 31.48) / .42));
+    this.b1.textContent = s1.slice(0, n);
+    rise(this.b2.ws[0], P(t, 31.88, .4, E.out5));
+    this.hl.style.transform = `scaleX(${P(t, 32.0, .35, E.out5)})`;
+    const c = P(t, 32.62, .5, E.out5);
+    st(this.card, { opacity: clamp(c * 1.5), transform: `translateY(${(1 - c) * 300}px)` });
+    const s2 = 'ميزانيتي: ', tp = clamp((t - 33.02) / .55);
+    this.tx.textContent = s2.slice(0, Math.round(s2.length * tp));
+    this.caret.style.opacity = (tp > 0 && tp < 1) || Math.floor(t * 2.6) % 2 === 0 ? 1 : 0;
+    rise(this.l3.ws[0], P(t, 33.40, .4, E.out5));
+    const a = P(t, 33.65, .3, E.back);
+    st(this.arrow, { opacity: clamp(a * 2), transform: `translateY(${t > 33.95 ? 22 * Math.abs(Math.sin((t - 33.95) * 4.2)) : 0}px) scale(${Math.max(0, a)})` });
+    this.send.style.transform = `scale(${1 + .16 * Math.sin(Math.PI * P(t, 34.05, .35, E.lin))})`;
+  } });
+
+/* ---------- flash overlay for cuts ---------- */
+const flash = mk('div', stage, { position: 'absolute', inset: 0, background: '#fff', opacity: 0, zIndex: 999, pointerEvents: 'none' });
+
+/* ---------- master render ---------- */
+async function render(t) {
+  let fl = 0;
+  for (let i = 0; i < scenes.length; i++) {
+    const s = scenes[i], nx = scenes[i + 1];
+    const nd = nx ? (nx.d || .28) : 0;
+    let vis = t >= s.a && t < s.b, outP = -1;
+    if (nx && t >= s.b && t < s.b + nd && nx.trans !== 'cut') { vis = true; outP = (t - s.b) / nd; }
+    s.root.style.display = vis ? 'block' : 'none';
+    if (!vis) continue;
+    s.update(t);
+    let tf = 'none', op = 1, filt = 'none', clip = 'none';
+    const din = s.d || .28;
+    if (outP >= 0) {
+      const p = E.io3(clamp(outP));
+      if (nx.trans === 'slide') { tf = `translateY(${-p * 560}px) scale(${1 - p * .08})`; filt = `brightness(${1 - p * .45})`; }
+      else if (nx.trans === 'zoom') { tf = `scale(${1 + p * .3})`; op = 1 - p; }
+    } else if (i > 0 && t - s.a < din) {
+      const p = clamp((t - s.a) / din);
+      if (s.trans === 'slide') { tf = `translateY(${(1 - E.out5(p)) * 1920}px)`; }
+      else if (s.trans === 'zoom') { const e = E.out3(p); tf = `scale(${lerp(1.4, 1, e)})`; op = e; filt = `blur(${(1 - e) * 16}px)`; }
+      else if (s.trans === 'reveal') { const e = E.io3(p); clip = `inset(${lerp(34, 0, e)}% ${lerp(24, 0, e)}% ${lerp(34, 0, e)}% ${lerp(24, 0, e)}% round ${lerp(60, 0, e)}px)`; }
+      else if (s.trans === 'cut') { tf = `scale(${lerp(1.1, 1, E.out3(p))})`; if (s.flash !== false) fl = Math.max(fl, .38 * (1 - p)); }
+    }
+    st(s.root, { transform: tf, opacity: op, filter: filt, clipPath: clip, zIndex: i + 1 });
+  }
+  flash.style.opacity = fl;
+  const proms = [];
+  for (const f of foots) {
+    if (f.scene.root.style.display === 'none') continue;
+    const fr = fidx(Math.floor((t - f.t0) * FPS + 1e-6), f.n);
+    if (fr !== f.cur) { f.cur = fr; f.e.src = `shots/${f.name}/${String(fr).padStart(4, '0')}.jpg`; proms.push(f.e.decode().catch(() => {})); }
+  }
+  await Promise.all(proms);
+}
+window.render = render;
+window.TOTAL = TOTAL;
+</script>
+</body>
+</html>

@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Digital Cards Motion</title>
+<link rel="stylesheet" href="fonts/cairo.css">
+<style>
+:root{
+  --navy:#0E2A47; --slate:#5B7491; --line:#DCE7F3;
+  --blue:#2F7CF6; --blue-d:#1D5FD1; --blue-l:#E4EFFF;
+  --teal:#13B5C8; --teal-d:#0A8D9E; --teal-l:#DDF6F9;
+  --green:#22C55E; --green-d:#15A04A; --green-l:#DFF8E8;
+  --bg:#F5FAFF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--bg)}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;direction:rtl;
+  font-family:'Cairo',sans-serif;color:var(--navy);background:var(--bg)}
+.abs{position:absolute}
+.scene{position:absolute;inset:0}
+.center{position:absolute;left:0;right:0;text-align:center}
+.panel{position:absolute;background:#fff;border-radius:40px;border:2px solid #E4EEF9;
+  box-shadow:0 24px 60px rgba(32,86,160,.10)}
+.pill{display:inline-flex;align-items:center;gap:14px;padding:8px 34px;border-radius:999px;font-weight:800;white-space:nowrap}
+.ltr{direction:ltr;unicode-bidi:isolate}
+svg.ic{display:block;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+/* bg */
+#bg{position:absolute;inset:0}
+#dots{position:absolute;inset:-60px;background-image:radial-gradient(#C9DCF2 2.2px,transparent 2.8px);background-size:46px 46px;opacity:.55}
+.blob{position:absolute;border-radius:50%;filter:blur(70px)}
+.geo{position:absolute}
+/* header */
+#chip{position:absolute;top:70px;right:64px;display:flex;align-items:center;gap:14px;background:#fff;border:2px solid #E4EEF9;
+  border-radius:999px;padding:10px 30px 10px 22px;font-size:34px;font-weight:800;box-shadow:0 10px 30px rgba(32,86,160,.08)}
+#chip .dot{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));display:grid;place-items:center;color:#fff}
+#prog{position:absolute;top:104px;left:64px;display:flex;gap:10px;direction:ltr}
+#prog .seg{width:58px;height:12px;border-radius:6px;background:#DCE7F3;overflow:hidden}
+#prog .seg i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--blue))}
+/* heads */
+.head{display:inline-flex;align-items:center;gap:24px}
+.num{width:92px;height:92px;border-radius:28px;background:linear-gradient(135deg,var(--teal),var(--blue));color:#fff;
+  display:grid;place-items:center;font-size:50px;font-weight:900;box-shadow:0 12px 26px rgba(47,124,246,.28)}
+.htxt{font-size:72px;font-weight:900;line-height:1.1}
+.sub{font-size:40px;font-weight:700;color:var(--slate)}
+/* caption */
+.cap{position:absolute;left:0;right:0;top:1688px;text-align:center}
+.cap em{font-style:normal}
+.cap span{display:inline-flex;align-items:center;gap:16px;max-width:960px;background:rgba(255,255,255,.95);border:2px solid #E1ECF8;
+  border-radius:40px;padding:14px 38px;font-size:42px;font-weight:700;line-height:1.35;box-shadow:0 14px 34px rgba(32,86,160,.10)}
+.cap span::before{content:"";width:12px;height:42px;border-radius:6px;background:linear-gradient(180deg,var(--teal),var(--blue));flex:none}
+/* s1 */
+#s1title{top:236px;font-size:98px;font-weight:900;line-height:1.2;white-space:nowrap}
+#s1title .w{display:inline-block;margin:0 8px}
+.cardpanel{display:flex;flex-direction:column;align-items:center;padding-top:30px}
+.cardpanel img{width:400px;height:400px;object-fit:contain}
+.plabel{font-size:58px;font-weight:900;margin-top:10px}
+.pbar{width:120px;height:12px;border-radius:6px;margin-top:12px}
+.pnote{font-size:32px;font-weight:700;color:var(--slate);margin-top:16px}
+#vs{position:absolute;left:465px;top:850px;width:150px;height:150px;border-radius:50%;background:#fff;display:grid;place-items:center;
+  font-size:56px;font-weight:900;color:var(--navy);box-shadow:0 18px 40px rgba(32,86,160,.18);border:6px solid var(--teal-l);font-family:'Cairo'}
+.agenda{position:absolute;top:1372px;width:270px;height:96px;margin-left:-135px;display:flex;align-items:center;justify-content:center;gap:12px;
+  background:#fff;border-radius:48px;border:2px solid #E4EEF9;font-size:38px;font-weight:800;box-shadow:0 12px 28px rgba(32,86,160,.08)}
+/* s2 */
+.track{position:absolute;height:72px;border-radius:36px;background:#EEF4FB;overflow:hidden}
+.fill{position:absolute;right:0;top:0;bottom:0;border-radius:36px}
+.val{position:absolute;display:flex;align-items:center;gap:10px;font-size:42px;font-weight:900;white-space:nowrap;height:72px;line-height:1}
+.rowlab{position:absolute;display:flex;align-items:center;gap:18px;font-size:48px;font-weight:900}
+.rowlab img{width:120px;height:120px;object-fit:contain}
+.tick{position:absolute;font-size:32px;font-weight:700;color:var(--slate);width:140px;margin-left:-70px;text-align:center}
+.mk{position:absolute;width:150px;margin-left:-75px;text-align:center;font-size:32px;font-weight:800;color:var(--slate)}
+.mk b{display:block;width:30px;height:30px;border-radius:50%;margin:0 auto 10px;background:#fff;border:6px solid #C9D9EC}
+/* s3 */
+#bank{position:absolute;left:250px;top:418px;width:580px;height:340px;border-radius:36px;color:#fff;overflow:hidden;
+  background:linear-gradient(135deg,#3F8BFA 0%,#1FA9D6 60%,#22C3A8 100%);box-shadow:0 26px 50px rgba(31,120,220,.28)}
+#bank .chipg{position:absolute;right:48px;top:100px;width:92px;height:70px;border-radius:14px;background:linear-gradient(135deg,#FFE29A,#F2B84B)}
+#bank .lab{position:absolute;right:48px;top:30px;font-size:32px;font-weight:800;opacity:.95}
+#bank .nfc{position:absolute;left:44px;top:34px;color:#fff;opacity:.9}
+#bank .numrow{position:absolute;left:0;right:0;bottom:40px;text-align:center;font-size:46px;font-weight:800;letter-spacing:2px;white-space:nowrap}
+#bank .g{display:inline-block;position:relative;margin:0 9px}
+#bank .g .m{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:9px}
+#bank .g .m i{width:15px;height:15px;border-radius:50%;background:#fff}
+#bank .circ{position:absolute;border-radius:50%;background:rgba(255,255,255,.12)}
+#token{position:absolute;left:170px;top:1192px;width:740px;height:118px;border-radius:59px;background:#fff;border:4px solid var(--teal);
+  display:grid;place-items:center;font-size:52px;font-weight:900;color:var(--teal-d);letter-spacing:4px;box-shadow:0 16px 36px rgba(19,181,200,.18)}
+#tokenlab{position:absolute;right:210px;top:1166px;background:var(--teal);color:#fff;font-size:30px;font-weight:800;padding:2px 24px;border-radius:999px}
+/* s4 */
+.gl{position:absolute;height:3px;background:#E3ECF6;border-radius:2px;transform-origin:100% 50%}
+.gll{position:absolute;font-size:30px;font-weight:700;color:#8AA0B8;width:90px;text-align:right}
+.bar{position:absolute;bottom:0;border-radius:26px 26px 8px 8px}
+.bv{position:absolute;width:240px;text-align:center;font-size:66px;font-weight:900}
+.yr{position:absolute;width:240px;text-align:center;font-size:44px;font-weight:800;color:var(--slate)}
+/* s5 */
+.row5{position:absolute;left:110px;width:860px;height:108px;border-radius:54px;background:#fff;border:2px solid #E4EEF9;
+  box-shadow:0 14px 32px rgba(32,86,160,.09);display:flex;align-items:center;padding:0 16px;gap:24px}
+.row5 .icn{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none}
+.row5 .t{font-size:46px;font-weight:800;flex:1}
+.row5 .ck{width:70px;height:70px;flex:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- ===== background ===== -->
+  <div id="bg">
+    <div id="dots"></div>
+    <div class="blob" id="b1" style="width:620px;height:620px;left:-200px;top:-120px;background:#9FE9F0;opacity:.55"></div>
+    <div class="blob" id="b2" style="width:700px;height:700px;right:-260px;top:620px;background:#B7D3FF;opacity:.55"></div>
+    <div class="blob" id="b3" style="width:620px;height:620px;left:-160px;bottom:-200px;background:#B5F0CB;opacity:.55"></div>
+    <svg class="geo" id="g1" width="160" height="160" style="left:900px;top:300px"><circle cx="80" cy="80" r="56" stroke="#BFE9EE" stroke-width="10" fill="none" stroke-dasharray="40 20"/></svg>
+    <svg class="geo" id="g2" width="120" height="120" style="left:40px;top:1530px"><rect x="25" y="25" width="70" height="70" rx="14" stroke="#C6DBFA" stroke-width="10" fill="none"/></svg>
+    <svg class="geo" id="g3" width="90" height="90" style="left:960px;top:1540px"><path d="M45 10v70M10 45h70" stroke="#BDEFD0" stroke-width="12" stroke-linecap="round"/></svg>
+    <svg class="geo" id="g4" width="120" height="110" style="left:30px;top:230px"><path d="M60 12 108 96H12Z" stroke="#C6DBFA" stroke-width="9" fill="none" stroke-linejoin="round"/></svg>
+  </div>
+
+  <!-- ===== header ===== -->
+  <div id="chip"><div class="dot" data-icon="card" data-size="30" data-sw="2.6"></div><span>البطاقات الرقمية</span></div>
+  <div id="prog"><div class="seg"><i></i></div><div class="seg"><i></i></div><div class="seg"><i></i></div><div class="seg"><i></i></div><div class="seg"><i></i></div></div>
+
+  <!-- ===== S1: title / comparison ===== -->
+  <section class="scene" id="s1">
+    <div class="center" id="s1title"><span class="w" style="color:var(--blue)">رقمية</span><span class="w">أم</span><span class="w" style="color:var(--green-d)">بلاستيكية؟</span></div>
+    <div class="center" id="s1sub" style="top:420px"><span class="pill" style="background:var(--teal-l);color:var(--teal-d);font-size:46px"><span data-icon="chart" data-size="44" data-sw="2.6"></span>الفرق بالأرقام</span></div>
+    <div class="panel cardpanel" id="s1p1" style="left:565px;top:560px;width:445px;height:720px">
+      <img src="assets/phone_card.png" id="s1img1"><div class="plabel" style="color:var(--blue)">رقمية</div>
+      <div class="pbar" style="background:linear-gradient(90deg,var(--teal),var(--blue))"></div><div class="pnote">داخل جوالك</div>
+    </div>
+    <div class="panel cardpanel" id="s1p2" style="left:70px;top:560px;width:445px;height:720px">
+      <img src="assets/plastic_card.png" id="s1img2"><div class="plabel" style="color:var(--green-d)">بلاستيكية</div>
+      <div class="pbar" style="background:linear-gradient(90deg,var(--green),var(--teal))"></div><div class="pnote">في محفظتك</div>
+    </div>
+    <svg class="abs" id="s1ring" width="300" height="300" style="left:390px;top:775px"><circle cx="150" cy="150" r="80" fill="none" stroke="var(--teal)" stroke-width="6"/></svg>
+    <div id="vs">VS</div>
+    <svg class="abs" width="1080" height="200" style="left:0;top:1320px"><path id="s1line" d="M955 100 H125" stroke="#BFD6EF" stroke-width="5" stroke-dasharray="2 14" stroke-linecap="round" fill="none"/></svg>
+    <div class="agenda" id="ag1" style="left:820px"><span style="color:var(--teal)" data-icon="clock" data-size="42" data-sw="2.6"></span>السرعة</div>
+    <div class="agenda" id="ag2" style="left:540px"><span style="color:var(--blue)" data-icon="shield" data-size="42" data-sw="2.6"></span>الأمان</div>
+    <div class="agenda" id="ag3" style="left:260px"><span style="color:var(--green-d)" data-icon="trend" data-size="42" data-sw="2.6"></span>الانتشار</div>
+  </section>
+
+  <!-- ===== S2: speed bar chart ===== -->
+  <section class="scene" id="s2">
+    <div class="center" id="s2h" style="top:214px"><div class="head"><div class="num">1</div><div class="htxt">وقت الحصول على البطاقة</div></div></div>
+    <div class="center sub" id="s2s" style="top:330px">كم تنتظر حتى تبدأ الدفع؟</div>
+    <div class="panel" id="s2p" style="left:70px;top:420px;width:940px;height:760px">
+      <svg class="abs" width="940" height="760" style="left:0;top:0" id="s2grid">
+        <g stroke="#DCE7F3" stroke-width="3" stroke-dasharray="6 10">
+          <line class="gv" x1="823" y1="150" x2="823" y2="600"/><line class="gv" x1="588" y1="150" x2="588" y2="600"/>
+          <line class="gv" x1="352" y1="150" x2="352" y2="600"/><line class="gv" x1="117" y1="150" x2="117" y2="600"/>
+        </g>
+        <path id="s2axis" d="M890 610 H50" stroke="#9FB6CF" stroke-width="4" stroke-linecap="round" fill="none"/>
+      </svg>
+      <div class="rowlab" id="s2la" style="right:40px;top:20px"><img src="assets/phone_card.png"><span style="color:var(--blue)">البطاقة الرقمية</span>
+        <span class="pill" id="s2fast" style="background:var(--teal-l);color:var(--teal-d);font-size:32px;padding:4px 22px;gap:8px"><span data-icon="zap" data-size="30" data-sw="2.6"></span>الأسرع</span></div>
+      <div class="track" id="s2ta" style="left:50px;top:156px;width:840px"><div class="fill" id="s2fa" style="background:linear-gradient(270deg,var(--teal),var(--blue))"></div></div>
+      <div class="val" id="s2va" style="top:156px;color:var(--blue-d)"><span data-icon="zap" data-size="44" data-sw="2.8"></span>دقائق</div>
+      <div class="rowlab" id="s2lb" style="right:40px;top:262px"><img src="assets/plastic_card.png"><span style="color:var(--green-d)">البطاقة البلاستيكية</span></div>
+      <div class="track" id="s2tb" style="left:50px;top:398px;width:840px"><div class="fill" id="s2fb" style="background:linear-gradient(270deg,var(--green),var(--teal))"></div></div>
+      <div class="val" id="s2vb" style="top:398px;color:#fff"><span data-icon="package" data-size="44" data-sw="2.8"></span>أيام</div>
+      <div class="tick" style="left:823px;top:630px">دقيقة</div><div class="tick" style="left:588px;top:630px">ساعة</div>
+      <div class="tick" style="left:352px;top:630px">يوم</div><div class="tick" style="left:117px;top:630px">أسبوع</div>
+      <div class="center" id="s2axl" style="top:690px;font-size:28px;font-weight:700;color:#8AA0B8">مدة الانتظار ←</div>
+    </div>
+    <div class="center" id="s2rt" style="top:1218px;font-size:38px;font-weight:800;color:var(--slate)">رحلة البطاقة البلاستيكية</div>
+    <svg class="abs" width="1080" height="200" style="left:0;top:1290px"><path id="s2road" d="M950 80 H130" stroke="#B9CCE2" stroke-width="8" stroke-dasharray="18 16" stroke-linecap="round" fill="none"/></svg>
+    <div class="mk" id="mk1" style="left:900px;top:1352px"><b></b>إصدار</div>
+    <div class="mk" id="mk2" style="left:650px;top:1352px"><b></b>طباعة</div>
+    <div class="mk" id="mk3" style="left:400px;top:1352px"><b></b>شحن</div>
+    <div class="mk" id="mk4" style="left:160px;top:1352px"><b></b>استلام</div>
+    <div class="abs" id="truck" style="left:0;top:1300px;width:110px;height:110px;margin-left:-55px;border-radius:30px;background:linear-gradient(135deg,var(--green),var(--teal));color:#fff;display:grid;place-items:center;box-shadow:0 14px 28px rgba(34,197,94,.3)"><span data-icon="truck" data-size="64" data-sw="2.4" style="transform:scaleX(-1);display:block"></span></div>
+  </section>
+
+  <!-- ===== S3: tokenization flow ===== -->
+  <section class="scene" id="s3">
+    <div class="center" id="s3h" style="top:214px"><div class="head"><div class="num">2</div><div class="htxt">تقنية الترميز</div></div></div>
+    <div class="center sub ltr" id="s3s" style="top:330px;color:var(--teal-d);letter-spacing:2px">Tokenization</div>
+    <div id="bank">
+      <div class="circ" style="width:360px;height:360px;left:-120px;top:-170px"></div>
+      <div class="circ" style="width:260px;height:260px;left:380px;top:180px"></div>
+      <div class="lab">رقمك الحقيقي</div><div class="chipg"></div>
+      <div class="nfc" data-icon="nfc" data-size="56" data-sw="2.6"></div>
+      <div class="numrow ltr"><span class="g">4532</span><span class="g" id="gA"><span class="d">8810</span><span class="m"><i></i><i></i><i></i><i></i></span></span><span class="g" id="gB"><span class="d">2291</span><span class="m"><i></i><i></i><i></i><i></i></span></span><span class="g">7746</span></div>
+    </div>
+    <svg class="abs" width="1080" height="1300" style="left:0;top:0;overflow:visible">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 9 5 1 9z" fill="var(--blue)"/></marker>
+            <marker id="ah2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 9 5 1 9z" fill="var(--teal)"/></marker>
+            <marker id="ah3" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 9 5 1 9z" fill="var(--green-d)"/></marker></defs>
+      <path id="a1" d="M540 772 V846" stroke="var(--blue)" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <path id="a2" d="M540 1100 V1160" stroke="var(--teal)" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <path id="a3" d="M540 1324 V1384" stroke="var(--green-d)" stroke-width="9" stroke-linecap="round" fill="none"/>
+    </svg>
+    <svg class="abs" id="s3rings" width="400" height="400" style="left:340px;top:780px"><circle id="r1" cx="200" cy="200" r="110" fill="none" stroke="var(--teal)" stroke-width="5"/><circle id="r2" cx="200" cy="200" r="110" fill="none" stroke="var(--blue)" stroke-width="5"/></svg>
+    <img class="abs" id="shield" src="assets/shield.png" style="left:410px;top:850px;width:260px;height:260px">
+    <div class="abs" id="encl" style="left:700px;top:940px"><span class="pill" style="background:var(--blue-l);color:var(--blue-d);font-size:36px;padding:6px 26px"><span data-icon="lock" data-size="34" data-sw="2.6"></span>تشفير</span></div>
+    <div class="abs" id="encr" style="left:120px;top:940px"><span class="pill" style="background:var(--teal-l);color:var(--teal-d);font-size:36px;padding:6px 26px"><span data-icon="swap" data-size="34" data-sw="2.6"></span>استبدال</span></div>
+    <div id="token"><span class="ltr" id="tokentxt">TKN-8F3A-91C2</span></div>
+    <div id="tokenlab">رمز بديل</div>
+    <div class="center" id="store" style="top:1400px"><span class="pill" style="background:#fff;border:2px solid #E4EEF9;font-size:44px;padding:14px 22px 14px 40px;gap:20px;box-shadow:0 14px 30px rgba(32,86,160,.09)">
+      <span style="width:84px;height:84px;border-radius:50%;background:var(--green-l);color:var(--green-d);display:grid;place-items:center" data-icon="store" data-size="50" data-sw="2.4"></span>
+      التاجر يستلم الرمز فقط
+      <span id="stck" style="width:64px;height:64px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center" data-icon="check" data-size="40" data-sw="3.4"></span></span></div>
+  </section>
+
+  <!-- ===== S4: stats ===== -->
+  <section class="scene" id="s4">
+    <div class="center" id="s4h" style="top:214px"><div class="head"><div class="num">3</div><div class="htxt">المدفوعات الإلكترونية</div></div></div>
+    <div class="center sub" id="s4s" style="top:330px">حصتها من مدفوعات التجزئة في السعودية</div>
+    <div class="panel" id="s4p" style="left:70px;top:420px;width:940px;height:860px">
+      <div id="s4grid"></div>
+      <div class="abs" id="s4bars" style="left:0;top:0;width:940px;height:720px">
+        <div class="bar" id="bar23" style="left:520px;width:200px;height:0;background:linear-gradient(0deg,#8FB8FF,#B9D3FF)"></div>
+        <div class="bar" id="bar24" style="left:200px;width:200px;height:0;background:linear-gradient(0deg,var(--green),var(--teal));box-shadow:0 16px 40px rgba(34,197,94,.25)"></div>
+      </div>
+      <div class="bv ltr" id="v23" style="left:500px;color:var(--blue-d)">0%</div>
+      <div class="bv ltr" id="v24" style="left:180px;color:var(--green-d)">0%</div>
+      <div class="yr" id="y23" style="left:500px;top:740px">2023</div>
+      <div class="yr" id="y24" style="left:180px;top:740px">2024</div>
+      <svg class="abs" width="940" height="720" style="left:0;top:0;overflow:visible"><path id="trend" d="M640 210 C 560 70, 420 60, 330 120" stroke="var(--teal-d)" stroke-width="7" stroke-dasharray="1 0" stroke-linecap="round" fill="none" marker-end="url(#ah4)"/>
+        <defs><marker id="ah4" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M1 1 9 5 1 9z" fill="var(--teal-d)"/></marker></defs></svg>
+      <div class="abs" id="plus9" style="left:380px;top:20px"><span class="pill" style="background:var(--teal);color:#fff;font-size:38px;padding:4px 26px;gap:10px"><bdi class="ltr">+9</bdi>نقاط</span></div>
+    </div>
+    <div class="panel" id="s4stat" style="left:70px;top:1316px;width:940px;height:150px;border-radius:36px;display:flex;align-items:center;gap:28px;padding:0 34px">
+      <div style="width:96px;height:96px;border-radius:28px;background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff;display:grid;place-items:center;flex:none" data-icon="card" data-size="56" data-sw="2.4"></div>
+      <div style="display:flex;align-items:baseline;gap:18px"><span id="s4cnt" class="ltr" style="font-size:72px;font-weight:900;color:var(--blue-d)">0</span><span style="font-size:48px;font-weight:900;color:var(--blue-d)">مليار</span></div>
+      <div style="font-size:34px;font-weight:700;color:var(--slate);line-height:1.25">عملية غير نقدية<br>خلال 2024</div>
+    </div>
+    <div class="center" id="s4src" style="top:1500px;font-size:29px;font-weight:600;color:#8AA0B8">المصدر: البنك المركزي السعودي (ساما)</div>
+  </section>
+
+  <!-- ===== S5: summary ===== -->
+  <section class="scene" id="s5">
+    <svg class="abs" id="s5ring" width="560" height="560" style="left:260px;top:150px"><circle cx="280" cy="280" r="190" fill="none" stroke="var(--teal)" stroke-width="5"/></svg>
+    <img class="abs" id="s5img" src="assets/tap_pay.png" style="left:330px;top:210px;width:420px;height:420px">
+    <div class="center" id="s5t" style="top:640px;font-size:88px;font-weight:900;color:var(--blue)">البطاقة الرقمية</div>
+    <div class="row5" id="row1" style="top:800px"><div class="icn" style="background:var(--teal)" data-icon="zap" data-size="44" data-sw="2.6"></div><div class="t">إصدار فوري خلال دقائق</div>
+      <svg class="ck" viewBox="0 0 70 70"><circle cx="35" cy="35" r="31" fill="var(--green-l)"/><path class="ckp" d="M21 36 31 46 50 25" stroke="var(--green-d)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="row5" id="row2" style="top:932px"><div class="icn" style="background:var(--blue)" data-icon="shield" data-size="44" data-sw="2.6"></div><div class="t">حماية بتقنية الترميز</div>
+      <svg class="ck" viewBox="0 0 70 70"><circle cx="35" cy="35" r="31" fill="var(--green-l)"/><path class="ckp" d="M21 36 31 46 50 25" stroke="var(--green-d)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="row5" id="row3" style="top:1064px"><div class="icn" style="background:var(--green)" data-icon="phone" data-size="44" data-sw="2.6"></div><div class="t">دائمًا في جوالك</div>
+      <svg class="ck" viewBox="0 0 70 70"><circle cx="35" cy="35" r="31" fill="var(--green-l)"/><path class="ckp" d="M21 36 31 46 50 25" stroke="var(--green-d)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="center" style="top:1250px;font-size:100px;font-weight:900;line-height:1.2">
+      <span id="tg1" style="display:inline-block;color:var(--teal-d)">أسرع</span>
+      <span id="tg0" style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#BFD3E8;margin:0 22px;vertical-align:middle"></span>
+      <span id="tg2" style="display:inline-block;color:var(--green-d)">وأكثر أمانًا</span></div>
+    <svg class="abs" width="1080" height="60" style="left:0;top:1430px"><path id="s5ul" d="M800 30 H280" stroke="url(#ulg)" stroke-width="12" stroke-linecap="round" fill="none"/>
+      <defs><linearGradient id="ulg" gradientUnits="userSpaceOnUse" x1="280" y1="0" x2="800" y2="0"><stop offset="0" stop-color="#22C55E"/><stop offset=".5" stop-color="#13B5C8"/><stop offset="1" stop-color="#2F7CF6"/></linearGradient></defs></svg>
+  </section>
+
+  <!-- ===== captions ===== -->
+  <div class="cap" id="c1"><span><em>رقمية أم بلاستيكية؟ إليك الفرق بالأرقام</em></span></div>
+  <div class="cap" id="c2"><span><em>الرقمية في دقائق، والبلاستيكية تحتاج أيامًا</em></span></div>
+  <div class="cap" id="c3"><span><em>بالترميز، لا يصل رقم بطاقتك الحقيقي إلى التاجر</em></span></div>
+  <div class="cap" id="c4"><span><em>في السعودية: <bdi class="ltr">79%</bdi> من المدفوعات إلكترونية</em></span></div>
+  <div class="cap" id="c5"><span><em>الرقمية: أسرع، وأكثر أمانًا</em></span></div>
+</div>
+
+<script src="timeline.js"></script>
+<script>
+// ---------- icons (simple geometric line icons, 24x24) ----------
+const ICONS = {
+  card:'<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/>',
+  chart:'<path d="M3 21h18"/><rect x="5" y="11" width="3.2" height="7" rx="1"/><rect x="10.4" y="6" width="3.2" height="12" rx="1"/><rect x="15.8" y="9" width="3.2" height="9" rx="1"/>',
+  clock:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/>',
+  shield:'<path d="M12 21.5s7.5-3.6 7.5-9.6V5.6L12 2.8 4.5 5.6v6.3c0 6 7.5 9.6 7.5 9.6z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
+  trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  zap:'<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>',
+  package:'<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+  truck:'<path d="M2 5h12v11H2zM14 9h4l3.5 3.5V16H14"/><circle cx="6.5" cy="17.5" r="2"/><circle cx="17.5" cy="17.5" r="2"/>',
+  nfc:'<path d="M8 8.5a5 5 0 0 1 0 7M11.5 6a8.5 8.5 0 0 1 0 12M15 3.5a12 12 0 0 1 0 17"/>',
+  lock:'<rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
+  swap:'<path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5"/>',
+  store:'<path d="M3.5 9 5 4h14l1.5 5"/><path d="M3.5 9a2.8 2.8 0 0 0 5.7 0 2.8 2.8 0 0 0 5.6 0 2.8 2.8 0 0 0 5.7 0"/><path d="M5 11.5V20h14v-8.5M10 20v-5h4v5"/>',
+  check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  phone:'<rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18h3"/>',
+};
+document.querySelectorAll('[data-icon]').forEach(el=>{
+  const s=+el.dataset.size||32, sw=+el.dataset.sw||2.4;
+  el.insertAdjacentHTML('afterbegin',`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" stroke-width="${sw}">${ICONS[el.dataset.icon]}</svg>`);
+});
+
+// ---------- timeline helpers ----------
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const E={
+  lin:t=>t, outCubic:t=>1-Math.pow(1-t,3), outQuart:t=>1-Math.pow(1-t,4), inCubic:t=>t*t*t,
+  inOutCubic:t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,
+  outBack:t=>{const c1=1.7,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2)},
+  outBackS:t=>{const c1=1.1,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2)},
+};
+const P=(t,s,d,e=E.outCubic)=>e(clamp((t-s)/d));
+const $=id=>document.getElementById(id);
+function tf(el,{x=0,y=0,s=1,sx=null,sy=null,r=0,o=null}={}){
+  let tr=`translate(${x.toFixed(2)}px,${y.toFixed(2)}px)`;
+  if(s!==1) tr+=` scale(${s.toFixed(4)})`; if(sx!==null) tr+=` scaleX(${sx.toFixed(4)})`; if(sy!==null) tr+=` scaleY(${sy.toFixed(4)})`;
+  if(r) tr+=` rotate(${r.toFixed(2)}deg)`;
+  el.style.transform=tr; if(o!==null) el.style.opacity=clamp(o).toFixed(3);
+}
+// generic entrance: fades fast, moves/scales with ease
+function pop(el,t,s,d=.55,{dx=0,dy=40,s0=1,ease=E.outBack}={}){
+  const p=P(t,s,d,ease), q=P(t,s,d*.55,E.outCubic);
+  tf(el,{x:dx*(1-p),y:dy*(1-p),s:s0+(1-s0)*p,o:q}); return p;
+}
+function draw(path,t,s,d,ease=E.inOutCubic){
+  const L=path._L||(path._L=path.getTotalLength());
+  const p=P(t,s,d,ease); path.style.strokeDasharray=`${L} ${L}`; path.style.strokeDashoffset=(L*(1-p)).toFixed(2);
+  path.style.opacity=p>0?1:0; return p;
+}
+function drawDashed(path,t,s,d){ // reveal a dashed path using a mask-like clip via dashoffset trick on a wrapper (use clip-path inset)
+  const p=P(t,s,d,E.inOutCubic); path.style.clipPath=`inset(0 0 0 ${(100*(1-p)).toFixed(2)}%)`; return p;
+}
+const hash=(a,b)=>{let h=(a*374761393+b*668265263)>>>0;h=Math.imul(h^(h>>>13),1274126177)>>>0;return (h^(h>>>16))>>>0};
+
+// ---------- scene timing derived from narration ----------
+const V=TL.voice, TOT=TL.total;
+const SB=[0,(V[0][1]+V[1][0])/2,(V[1][1]+V[2][0])/2,(V[2][1]+V[3][0])/2,(V[3][1]+V[4][0])/2,TOT];
+const scenes=['s1','s2','s3','s4','s5'].map($);
+const caps=['c1','c2','c3','c4','c5'].map($);
+const segs=[...document.querySelectorAll('#prog .seg i')];
+
+function sceneEnv(i,t){
+  const a=SB[i], b=SB[i+1], el=scenes[i];
+  const last=i===4;
+  const out=last?0:P(t,b-.24,.3,E.inOutCubic);
+  const vis=t>=a-.05 && (last || t<=b+.08);
+  el.style.visibility=vis?'visible':'hidden';
+  tf(el,{y:-50*out,o:1-out});
+  return a;
+}
+
+function bg(t){
+  tf($('b1'),{x:Math.sin(t*.5)*40,y:Math.cos(t*.4)*30});
+  tf($('b2'),{x:Math.cos(t*.45)*40,y:Math.sin(t*.35)*40});
+  tf($('b3'),{x:Math.sin(t*.38+1)*40,y:Math.cos(t*.5)*30});
+  tf($('g1'),{r:t*14}); tf($('g2'),{r:-t*10,y:Math.sin(t*.8)*10}); tf($('g3'),{r:t*20}); tf($('g4'),{y:Math.sin(t*.9)*12,r:Math.sin(t*.5)*8});
+  tf($('dots'),{y:(t*6)%46});
+  pop($('chip'),t,0,.6,{dx:60,dy:0});
+  tf($('prog'),{o:P(t,.1,.4)});
+  segs.forEach((s,i)=>{ s.style.width=(100*clamp((t-SB[i])/(SB[i+1]-SB[i]))).toFixed(2)+'%'; });
+  caps.forEach((c,i)=>{
+    const a=SB[i]+(i?0.02:0.25), b=SB[i+1];
+    const pin=P(t,a,.4,E.outBackS), out=i===4?0:P(t,b-.2,.22,E.inCubic);
+    tf(c,{y:30*(1-pin)-20*out,o:Math.min(P(t,a,.22),1-out)});
+    c.style.visibility=(t>=a-.01&&(i===4||t<=b+.05))?'visible':'hidden';
+  });
+}
+
+function S1(t){
+  const a=sceneEnv(0,t);
+  [...document.querySelectorAll('#s1title .w')].forEach((w,k)=>pop(w,t,a+[.2,.62,.86][k],.6,{dy:80,s0:.85}));
+  pop($('s1sub'),t,a+2.0,.5,{dy:24,s0:.7});
+  pop($('s1p1'),t,a+.35,.75,{dx:180,dy:0,ease:E.outBackS});
+  pop($('s1p2'),t,a+.75,.75,{dx:-180,dy:0,ease:E.outBackS});
+  tf($('s1img1'),{y:Math.sin(t*2.2)*9,r:Math.sin(t*1.4)*1.5});
+  tf($('s1img2'),{y:Math.sin(t*2.2+1.6)*9,r:Math.sin(t*1.4+1)*1.5});
+  pop($('vs'),t,a+1.15,.55,{dy:0,s0:0});
+  const rp=((t-(a+1.3))%1.1+1.1)%1.1/1.1; const ron=t>a+1.3;
+  tf($('s1ring'),{s:.9+rp*.8,o:ron?(1-rp)*.7:0});
+  drawDashed($('s1line'),t,a+1.35,.6);
+  ['ag1','ag2','ag3'].forEach((id,k)=>pop($(id),t,a+1.4+k*.14,.5,{dy:30,s0:.6}));
+}
+
+function S2(t){
+  const a=sceneEnv(1,t);
+  pop($('s2h'),t,a,.55,{dy:36}); pop($('s2s'),t,a+.12,.5,{dy:24,ease:E.outCubic});
+  pop($('s2p'),t,a+.15,.6,{dy:60,s0:.97,ease:E.outCubic});
+  draw($('s2axis'),t,a+.35,.55);
+  document.querySelectorAll('#s2grid .gv').forEach((g,k)=>{g.style.opacity=P(t,a+.5+k*.06,.3).toFixed(3)});
+  document.querySelectorAll('#s2p .tick').forEach((g,k)=>pop(g,t,a+.5+k*.07,.4,{dy:16}));
+  tf($('s2axl'),{o:P(t,a+.8,.4)});
+  pop($('s2la'),t,a+.45,.55,{dx:60,dy:0,ease:E.outCubic});
+  pop($('s2lb'),t,a+.6,.55,{dx:60,dy:0,ease:E.outCubic});
+  pop($('s2fast'),t,a+1.95,.5,{dy:0,s0:.3});
+  const W=840;
+  const fa=.15*P(t,a+1.15,.7,E.outQuart), fb=.8*P(t,a+2.3,1.7,E.inOutCubic);
+  $('s2fa').style.width=(W*fa).toFixed(1)+'px'; $('s2fb').style.width=(W*fb).toFixed(1)+'px';
+  // value labels: A sits just outside its (short) bar, B rides inside the end of its bar
+  const va=$('s2va'), vb=$('s2vb');
+  va.style.left=(50+W*(1-fa)-22-va.offsetWidth).toFixed(1)+'px'; tf(va,{o:P(t,a+1.6,.3),x:20*(1-P(t,a+1.6,.4))});
+  vb.style.left=(50+W*(1-fb)+26).toFixed(1)+'px'; tf(vb,{o:P(t,a+2.9,.3)});
+  // journey
+  pop($('s2rt'),t,a+2.35,.5,{dy:20,ease:E.outCubic});
+  drawDashed($('s2road'),t,a+2.4,.5);
+  const xs=[900,650,400,160];
+  const tp=P(t,a+2.6,1.9,E.inOutCubic), tx=lerp(950,140,tp);
+  tf($('truck'),{x:tx,y:Math.abs(Math.sin(t*16))*-5*(tp>0&&tp<1?1:0),o:P(t,a+2.55,.25),s:.6+.4*P(t,a+2.55,.4,E.outBack)});
+  ['mk1','mk2','mk3','mk4'].forEach((id,k)=>{
+    const el=$(id); pop(el,t,a+2.5+k*.08,.4,{dy:20});
+    const hit=tx<=xs[k]+10; const b=el.querySelector('b');
+    b.style.borderColor=hit?'var(--green)':'#C9D9EC'; b.style.background=hit?'var(--green-l)':'#fff';
+    el.style.color=hit?'var(--green-d)':'var(--slate)';
+  });
+}
+
+const TOKEN='TKN-8F3A-91C2', CH='ABCDEF0123456789#*';
+function S3(t){
+  const a=sceneEnv(2,t);
+  pop($('s3h'),t,a,.55,{dy:36}); pop($('s3s'),t,a+.12,.5,{dy:24,ease:E.outCubic});
+  pop($('bank'),t,a+.12,.6,{dy:60,s0:.88,ease:E.outBackS});
+  tf($('bank'),{...{}, y:(1-P(t,a+.12,.6,E.outBackS))*60, s:.88+.12*P(t,a+.12,.6,E.outBackS), r:Math.sin(t*1.6)*1.2, o:P(t,a+.12,.3)});
+  draw($('a1'),t,a+.5,.3); $('a1').setAttribute('marker-end',P(t,a+.5,.3)>.9?'url(#ah)':'');
+  pop($('shield'),t,a+.72,.55,{dy:0,s0:.25});
+  const rp1=((t-(a+.9))%1)/1, rp2=((t-(a+1.4))%1)/1;
+  tf($('r1'),{}); $('r1').setAttribute('r',(110+rp1*90).toFixed(1)); $('r1').style.opacity=t>a+.9?((1-rp1)*.6).toFixed(3):0;
+  $('r2').setAttribute('r',(110+rp2*90).toFixed(1)); $('r2').style.opacity=t>a+1.4?((1-rp2)*.5).toFixed(3):0;
+  pop($('encl'),t,a+.95,.45,{dx:-40,dy:0}); pop($('encr'),t,a+1.05,.45,{dx:40,dy:0});
+  // mask the middle digits once the shield is active
+  ['gA','gB'].forEach((id,k)=>{const m=P(t,a+.95+k*.12,.3); const g=$(id);
+    g.querySelector('.d').style.opacity=(1-m).toFixed(3); g.querySelector('.m').style.opacity=m.toFixed(3);});
+  draw($('a2'),t,a+1.12,.28); $('a2').setAttribute('marker-end',P(t,a+1.12,.28)>.9?'url(#ah2)':'');
+  pop($('token'),t,a+1.3,.5,{dy:0,s0:.6}); pop($('tokenlab'),t,a+1.5,.4,{dy:14,s0:.6});
+  const f=Math.floor(t*30/2); let s='';
+  for(let i=0;i<TOKEN.length;i++){const settle=a+1.45+i*.06; s+= (TOKEN[i]==='-'||t>=settle)?TOKEN[i]:CH[hash(i,f)%CH.length];}
+  $('tokentxt').textContent=s;
+  draw($('a3'),t,a+2.15,.28); $('a3').setAttribute('marker-end',P(t,a+2.15,.28)>.9?'url(#ah3)':'');
+  pop($('store'),t,a+2.35,.55,{dy:30,s0:.85});
+  pop($('stck'),t,a+2.75,.45,{dy:0,s0:0});
+}
+
+// build gridlines for S4
+(function(){const g=$('s4grid');[0,25,50,75,100].forEach(v=>{const y=720-v*6;
+  g.insertAdjacentHTML('beforeend',`<div class="gl" data-v="${v}" style="left:60px;width:740px;top:${y}px"></div><div class="gll ltr" data-v="${v}" style="left:820px;top:${y-24}px">${v}%</div>`);});})();
+function S4(t){
+  const a=sceneEnv(3,t);
+  pop($('s4h'),t,a,.55,{dy:36}); pop($('s4s'),t,a+.12,.5,{dy:24,ease:E.outCubic});
+  pop($('s4p'),t,a+.15,.6,{dy:60,s0:.97,ease:E.outCubic});
+  document.querySelectorAll('#s4grid .gl').forEach((l,k)=>{const p=P(t,a+.3+k*.06,.45,E.outCubic); l.style.transform=`scaleX(${p.toFixed(3)})`; l.style.opacity=p>0?1:0;});
+  document.querySelectorAll('#s4grid .gll').forEach((l,k)=>tf(l,{o:P(t,a+.4+k*.06,.3)}));
+  const h23=P(t,a+.55,.95,E.outCubic)*70*6, h24=P(t,a+2.25,1.15,E.inOutCubic)*79*6;
+  $('bar23').style.height=h23.toFixed(1)+'px'; $('bar24').style.height=h24.toFixed(1)+'px';
+  const v23=$('v23'), v24=$('v24');
+  v23.textContent=Math.round(h23/6)+'%'; v24.textContent=Math.round(h24/6)+'%';
+  v23.style.top=(720-h23-96).toFixed(1)+'px'; v24.style.top=(720-h24-96).toFixed(1)+'px';
+  tf(v23,{o:P(t,a+.6,.2)}); tf(v24,{o:P(t,a+2.3,.2), s:1+.12*Math.sin(Math.PI*P(t,a+3.35,.4,E.lin))});
+  pop($('y23'),t,a+.45,.4,{dy:16}); pop($('y24'),t,a+.55,.4,{dy:16});
+  const tr=$('trend'); const L=tr._L||(tr._L=tr.getTotalLength()); const tp=P(t,a+3.3,.45,E.inOutCubic);
+  tr.style.strokeDasharray=`${L} ${L}`; tr.style.strokeDashoffset=(L*(1-tp)).toFixed(1); tr.style.opacity=tp>0?1:0;
+  tr.setAttribute('marker-end',tp>.92?'url(#ah4)':'');
+  pop($('plus9'),t,a+3.62,.45,{dy:0,s0:.2});
+  pop($('s4stat'),t,a+1.2,.55,{dy:50,ease:E.outBackS});
+  $('s4cnt').textContent=(12.6*P(t,a+1.3,1.1,E.outCubic)).toFixed(1);
+  tf($('s4src'),{o:P(t,a+1.6,.4)});
+}
+
+function S5(t){
+  const a=sceneEnv(4,t);
+  pop($('s5img'),t,a,.65,{dy:30,s0:.6});
+  const im=$('s5img'); if(t>a+.65) tf(im,{y:Math.sin((t-a)*2.2)*10,o:1});
+  const rp=(((t-(a+.4))%1.2)+1.2)%1.2/1.2; tf($('s5ring'),{s:.75+rp*.45,o:t>a+.4?(1-rp)*.55:0});
+  pop($('s5t'),t,a+.15,.55,{dy:40,s0:.9});
+  ['row1','row2','row3'].forEach((id,k)=>{pop($(id),t,a+.3+k*.14,.55,{dx:90,dy:0,ease:E.outBackS});
+    draw($(id).querySelector('.ckp'),t,a+.7+k*.14,.3,E.outCubic);});
+  pop($('tg1'),t,a+1.02,.5,{dy:60,s0:.5}); tf($('tg0'),{o:P(t,a+1.4,.3)});
+  pop($('tg2'),t,a+1.62,.55,{dy:60,s0:.5});
+  draw($('s5ul'),t,a+2.0,.6);
+}
+
+window.seek=function(t){ bg(t); S1(t); S2(t); S3(t); S4(t); S5(t); };
+Promise.all([document.fonts.ready,...[...document.images].map(i=>i.decode().catch(()=>{}))]).then(()=>{window.seek(0);window.READY=true;});
+</script>
+</body>
+</html>

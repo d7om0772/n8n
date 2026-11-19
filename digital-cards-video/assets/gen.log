@@ -1,0 +1,8 @@
+phone_card 200 success
+plastic_card 200 success
+shield 200 success
+tap_pay 200 success
+OK phone_card assets/phone_card.png
+OK plastic_card assets/plastic_card.png
+OK tap_pay assets/tap_pay.png
+OK shield assets/shield.png

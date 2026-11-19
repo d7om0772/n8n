@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Digital Cards Motion</title>
+<link rel="stylesheet" href="../node_modules/@fontsource/alexandria/500.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/alexandria/800.css">
+<link rel="stylesheet" href="../node_modules/@fontsource/alexandria/900.css">
+<style>
+:root{
+  --cream:#FFFBF6; --lav:#E7E0FF; --lilac:#CDBDFF; --blue:#CFE6FF; --sky:#A9D2FF;
+  --mint:#C8F2E2; --mint2:#97E3C6; --peach:#FFE1D1; --peach2:#FFC2A6; --butter:#FFF0B5;
+  --ink:#2E2A5A; --ink2:#6D68A3;
+  --holo:linear-gradient(100deg,#FFD6EE 0%,#DCD8FF 30%,#CFEFFF 55%,#CFF7E6 78%,#FFF1C2 100%);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--cream)}
+body{font-family:'Alexandria',sans-serif;color:var(--ink)}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:var(--cream)}
+
+/* ---------- background ---------- */
+#bg{position:absolute;inset:0}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.85}
+#dots{position:absolute;inset:-40px;background-image:radial-gradient(circle,rgba(110,100,190,.16) 2.4px,transparent 2.6px);background-size:44px 44px}
+.deco{position:absolute}
+.ring{border:6px solid var(--lilac);border-radius:50%}
+.plus{width:46px;height:46px}
+.plus:before,.plus:after{content:"";position:absolute;left:50%;top:50%;width:46px;height:12px;border-radius:6px;background:currentColor;transform:translate(-50%,-50%)}
+.plus:after{transform:translate(-50%,-50%) rotate(90deg)}
+.pill{border-radius:999px}
+
+/* ---------- generic collage pieces ---------- */
+.scene{position:absolute;inset:0;visibility:hidden}
+.obj{position:absolute;opacity:0;will-change:transform}
+.obj img{display:block;width:100%;height:auto;filter:drop-shadow(18px 22px 0 rgba(160,145,235,.32))}
+.fl{width:100%;height:100%}
+.shape{position:absolute;opacity:0}
+.glass{background:rgba(255,255,255,.5);border:3px solid rgba(255,255,255,.95);border-radius:44px;
+  box-shadow:inset 0 2px 0 #fff,16px 20px 0 rgba(160,145,235,.22);backdrop-filter:blur(14px)}
+.win-bar{height:70px;border-bottom:3px solid rgba(255,255,255,.95);display:flex;gap:16px;align-items:center;padding:0 34px;direction:ltr}
+.win-bar i{width:22px;height:22px;border-radius:50%;display:block}
+.holo{background:var(--holo)}
+
+/* text chips */
+.txt{position:absolute;left:0;right:0;display:flex;justify-content:center;pointer-events:none}
+.chip{position:relative;display:inline-block;opacity:0;font-weight:800;line-height:1.25;white-space:nowrap;
+  padding:14px 40px 24px;border-radius:30px;background:#fff;color:var(--ink);
+  box-shadow:12px 14px 0 var(--lilac)}
+.chip.holo{background:var(--holo)}
+.chip.mint{background:var(--mint);box-shadow:12px 14px 0 #A6D9EF}
+.chip.peach{background:var(--peach);box-shadow:12px 14px 0 var(--lilac)}
+.chip.blue{background:var(--blue);box-shadow:12px 14px 0 var(--lilac)}
+.chip.butter{background:var(--butter);box-shadow:12px 14px 0 var(--peach2)}
+.chip.ghost{background:transparent;box-shadow:none;padding:0}
+.xb{position:absolute;top:-26px;left:-30px;width:78px;height:78px;border-radius:50%;background:var(--peach2);
+  border:5px solid #fff;box-shadow:6px 7px 0 var(--lilac)}
+.xb:before,.xb:after{content:"";position:absolute;left:50%;top:50%;width:40px;height:10px;border-radius:5px;background:#fff;transform:translate(-50%,-50%) rotate(45deg)}
+.xb:after{transform:translate(-50%,-50%) rotate(-45deg)}
+.strike{position:absolute;left:18px;right:18px;top:54%;height:12px;border-radius:6px;background:var(--peach2);transform-origin:right center;transform:scaleX(0)}
+
+/* stepper */
+.step{position:absolute;width:118px;height:118px;border-radius:50%;background:#fff;border:5px solid #fff;
+  box-shadow:9px 10px 0 var(--lav);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:56px;color:var(--ink2);opacity:0}
+.step.on{background:var(--mint)}
+.step-line{position:absolute;height:12px;border-radius:6px;background:var(--lav);transform-origin:right center}
+
+/* code pill */
+#code{position:absolute;direction:ltr;font-weight:800;font-size:66px;letter-spacing:6px;color:var(--ink);
+  padding:22px 46px 30px;border-radius:999px;opacity:0}
+#code .cur{display:inline-block;width:6px;height:62px;background:var(--ink2);margin-left:6px;vertical-align:-8px}
+
+/* wipe */
+#wipe{position:absolute;inset:0;pointer-events:none}
+.wp{position:absolute;top:-500px;width:1700px;height:2920px;left:1200px}
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- ===================== BACKGROUND ===================== -->
+  <div id="bg">
+    <div class="blob" id="b1" style="width:820px;height:820px;left:-260px;top:-220px;background:#DCD3FF"></div>
+    <div class="blob" id="b2" style="width:760px;height:760px;right:-280px;top:520px;background:#CDEBFF"></div>
+    <div class="blob" id="b3" style="width:820px;height:820px;left:-200px;bottom:-260px;background:#D2F5E7"></div>
+    <div class="blob" id="b4" style="width:600px;height:600px;right:-160px;bottom:-160px;background:#FFE3D4"></div>
+    <div id="dots"></div>
+    <div class="deco ring" data-drift="1" style="width:150px;height:150px;left:70px;top:1460px;border-color:#D7CCFF"></div>
+    <div class="deco ring" data-drift="2" style="width:90px;height:90px;right:90px;top:180px;border-color:#BFE9D9"></div>
+    <div class="deco plus" data-drift="3" style="left:930px;top:1530px;color:#FFC9B0"></div>
+    <div class="deco plus" data-drift="4" style="left:110px;top:150px;color:#BFD9FF"></div>
+    <div class="deco pill" data-drift="5" style="width:170px;height:44px;left:860px;top:1080px;background:#FFF0B5"></div>
+  </div>
+
+  <!-- ===================== SCENE 1 : بطاقتك الرقمية… توصلك في ثواني ===================== -->
+  <div class="scene" id="s1">
+    <div class="shape" id="s1-circle" style="left:150px;top:640px;width:780px;height:780px;border-radius:50%;background:var(--lav)"></div>
+    <div class="shape glass" id="s1-win" style="left:96px;top:700px;width:560px;height:420px"><div class="win-bar"><i style="background:#FFC2A6"></i><i style="background:#FFE38A"></i><i style="background:#97E3C6"></i></div></div>
+    <div class="shape" id="s1-rect" style="left:610px;top:1240px;width:330px;height:200px;border-radius:40px;background:var(--mint)"></div>
+    <div class="shape holo" id="s1-strip" style="left:-60px;top:1520px;width:760px;height:90px;border-radius:999px"></div>
+    <div class="obj" id="s1-card" style="left:90px;top:760px;width:900px"><div class="fl"><img src="../build/el/card_hero.png"></div></div>
+    <div class="obj" id="s1-spark" style="left:770px;top:600px;width:250px"><div class="fl"><img src="../build/el/sparkles.png"></div></div>
+
+    <div class="txt" style="top:250px"><span class="chip" id="s1-t1" style="font-size:108px">بطاقتك الرقمية</span></div>
+    <div class="txt" style="top:470px;gap:26px">
+      <span class="chip ghost" id="s1-t2" style="font-size:96px;padding-top:14px">توصلك في</span>
+      <span class="chip holo" id="s1-t3" style="font-size:96px">ثواني</span>
+    </div>
+    <div class="obj" id="s1-bolt" style="left:40px;top:430px;width:150px"><div class="fl"><img src="../build/el/bolt.png"></div></div>
+  </div>
+
+  <!-- ===================== SCENE 2 : بدون شحن… وبدون انتظار ===================== -->
+  <div class="scene" id="s2">
+    <div class="shape" id="s2-circle" style="left:210px;top:780px;width:660px;height:660px;border-radius:50%;background:var(--blue)"></div>
+    <div class="shape" id="s2-rect" style="left:90px;top:1330px;width:380px;height:220px;border-radius:44px;background:var(--peach)"></div>
+    <div class="shape glass" id="s2-win" style="left:560px;top:720px;width:420px;height:300px"><div class="win-bar"><i style="background:#FFC2A6"></i><i style="background:#FFE38A"></i><i style="background:#97E3C6"></i></div></div>
+    <div class="obj" id="s2-env" style="left:170px;top:760px;width:740px"><div class="fl"><img src="../build/el/envelope.png"></div></div>
+    <div class="obj" id="s2-bolt" style="left:800px;top:1320px;width:200px"><div class="fl"><img src="../build/el/bolt.png"></div></div>
+    <div class="obj" id="s2-spark" style="left:80px;top:700px;width:200px"><div class="fl"><img src="../build/el/sparkles.png"></div></div>
+
+    <div class="txt" style="top:270px"><span class="chip peach" id="s2-t1" style="font-size:104px">بدون شحن<b class="xb" id="s2-x1"></b></span></div>
+    <div class="txt" style="top:500px"><span class="chip" id="s2-t2" style="font-size:104px">وبدون انتظار<b class="xb" id="s2-x2"></b></span></div>
+  </div>
+
+  <!-- ===================== SCENE 3 : اختر… ادفع… استلم ===================== -->
+  <div class="scene" id="s3">
+    <div class="shape" id="s3-circle" style="left:-120px;top:640px;width:700px;height:700px;border-radius:50%;background:var(--lav)"></div>
+    <div class="shape" id="s3-rect" style="left:600px;top:700px;width:420px;height:470px;border-radius:60px;background:var(--mint)"></div>
+    <div class="shape holo" id="s3-strip" style="left:300px;top:1640px;width:900px;height:110px;border-radius:999px"></div>
+
+    <!-- stepper (RTL: 1 on the right) -->
+    <div class="step-line" id="s3-line" style="left:300px;top:519px;width:480px"></div>
+    <div class="step-line" id="s3-line-on" style="left:300px;top:519px;width:480px;background:var(--mint2);transform:scaleX(0)"></div>
+    <div class="step" id="st1" style="left:741px;top:466px">١</div>
+    <div class="step" id="st2" style="left:481px;top:466px">٢</div>
+    <div class="step" id="st3" style="left:221px;top:466px">٣</div>
+
+    <div class="obj" id="s3-fan" style="left:40px;top:690px;width:620px"><div class="fl"><img src="../build/el/cards_fan.png"></div></div>
+    <div class="obj" id="s3-cursor" style="left:400px;top:930px;width:190px"><div class="fl"><img src="../build/el/cursor.png"></div></div>
+    <div class="obj" id="s3-shield" style="left:650px;top:690px;width:340px"><div class="fl"><img src="../build/el/shield.png"></div></div>
+    <div class="obj" id="s3-phone" style="left:290px;top:930px;width:500px"><div class="fl"><img src="../build/el/phone.png"></div></div>
+    <div class="glass" id="code" style="left:250px;top:1560px"><span id="code-txt"></span><span class="cur" id="code-cur"></span></div>
+    <div class="obj" id="s3-check" style="left:770px;top:1380px;width:210px"><div class="fl"><img src="../build/el/check.png"></div></div>
+
+    <div class="txt" style="top:220px"><span class="chip blue" id="s3-h1" style="font-size:100px">اختر بطاقتك</span></div>
+    <div class="txt" style="top:220px"><span class="chip mint" id="s3-h2" style="font-size:100px">ادفع بأمان</span></div>
+    <div class="txt" style="top:220px"><span class="chip holo" id="s3-h3" style="font-size:92px">استلم الكود فورًا</span></div>
+  </div>
+
+  <!-- ===================== SCENE 4 : ألعاب، تسوّق، ترفيه… كلها في مكان واحد ===================== -->
+  <div class="scene" id="s4">
+    <div class="shape" id="s4-c1" style="left:520px;top:300px;width:520px;height:520px;border-radius:50%;background:var(--lav)"></div>
+    <div class="shape" id="s4-c2" style="left:40px;top:760px;width:500px;height:500px;border-radius:50%;background:var(--blue)"></div>
+    <div class="shape" id="s4-c3" style="left:520px;top:1220px;width:500px;height:500px;border-radius:50%;background:var(--mint)"></div>
+    <div class="shape glass" id="s4-win" style="left:80px;top:760px;width:920px;height:720px"><div class="win-bar"><i style="background:#FFC2A6"></i><i style="background:#FFE38A"></i><i style="background:#97E3C6"></i></div></div>
+
+    <div class="obj" id="s4-game" style="left:560px;top:360px;width:440px"><div class="fl"><img src="../build/el/gamepad.png"></div></div>
+    <div class="obj" id="s4-cart" style="left:90px;top:790px;width:400px"><div class="fl"><img src="../build/el/cart.png"></div></div>
+    <div class="obj" id="s4-play" style="left:580px;top:1270px;width:380px"><div class="fl"><img src="../build/el/play.png"></div></div>
+
+    <div class="chip blue" id="s4-l1" style="position:absolute;left:150px;top:470px;font-size:96px">ألعاب</div>
+    <div class="chip peach" id="s4-l2" style="position:absolute;left:560px;top:920px;font-size:96px">تسوّق</div>
+    <div class="chip mint" id="s4-l3" style="position:absolute;left:150px;top:1400px;font-size:96px">ترفيه</div>
+
+    <div class="txt" style="top:260px"><span class="chip holo" id="s4-h" style="font-size:96px">كلها في مكان واحد</span></div>
+    <div class="obj" id="s4-spark" style="left:820px;top:620px;width:200px"><div class="fl"><img src="../build/el/sparkles.png"></div></div>
+  </div>
+
+  <!-- ===================== SCENE 5 : البطاقات الرقمية… أسرع هدية، وأذكى اختيار ===================== -->
+  <div class="scene" id="s5">
+    <div class="shape" id="s5-circle" style="left:130px;top:580px;width:820px;height:820px;border-radius:50%;background:var(--lav)"></div>
+    <div class="shape glass" id="s5-win" style="left:560px;top:540px;width:440px;height:340px"><div class="win-bar"><i style="background:#FFC2A6"></i><i style="background:#FFE38A"></i><i style="background:#97E3C6"></i></div></div>
+    <div class="shape holo" id="s5-strip" style="left:-80px;top:1150px;width:700px;height:96px;border-radius:999px"></div>
+    <div class="obj" id="s5-card" style="left:120px;top:630px;width:840px"><div class="fl"><img src="../build/el/card_hero.png"></div></div>
+    <div class="obj" id="s5-gift" style="left:50px;top:1050px;width:330px"><div class="fl"><img src="../build/el/gift_box.png"></div></div>
+    <div class="obj" id="s5-check" style="left:830px;top:1090px;width:190px"><div class="fl"><img src="../build/el/check.png"></div></div>
+    <div class="obj" id="s5-spark" style="left:60px;top:500px;width:230px"><div class="fl"><img src="../build/el/sparkles.png"></div></div>
+    <div class="obj" id="s5-bolt" style="left:870px;top:1390px;width:150px"><div class="fl"><img src="../build/el/bolt.png"></div></div>
+
+    <div class="txt" style="top:190px"><span class="chip" id="s5-t1" style="font-size:112px">البطاقات</span></div>
+    <div class="txt" style="top:380px"><span class="chip holo" id="s5-t2" style="font-size:112px">الرقمية</span></div>
+    <div class="txt" style="top:1410px"><span class="chip butter" id="s5-t3" style="font-size:88px">أسرع هدية</span></div>
+    <div class="txt" style="top:1580px"><span class="chip mint" id="s5-t4" style="font-size:88px">وأذكى اختيار</span></div>
+  </div>
+
+  <!-- ===================== WIPE ===================== -->
+  <div id="wipe">
+    <div class="wp" id="w1" style="background:#D9CFFF"></div>
+    <div class="wp" id="w2" style="background:#CFF1E4"></div>
+    <div class="wp holo" id="w3"></div>
+  </div>
+</div>
+
+<script src="../node_modules/gsap/dist/gsap.min.js"></script>
+<script>
+const TIMINGS = window.TIMINGS || null;   // injected by the renderer (audio/timings.json)
+const DUR = 19.0;
+const tl = gsap.timeline({paused:true, defaults:{ease:'power3.out'}});
+const $ = s => document.querySelector(s);
+
+// phrase start times (seconds) from the voiceover
+const P = (TIMINGS ? TIMINGS.phrases : []).map(p => p.start);
+const PE = (TIMINGS ? TIMINGS.phrases : []).map(p => p.end);
+const T = TIMINGS ? [
+  (PE[1]+P[2])/2,     // scene 1 -> 2
+  (PE[3]+P[4])/2,     // 2 -> 3
+  (PE[6]+P[7])/2,     // 3 -> 4
+  (PE[10]+P[11])/2,   // 4 -> 5
+] : [3.4,5.65,10.3,14.3];
+
+// ---------- helpers ----------
+function pop(sel, at, o={}){
+  tl.fromTo(sel, {opacity:0, scale:o.s0??0.2, rotation:o.r0??-14, x:o.x0??0, y:o.y0??60},
+    {opacity:1, scale:1, rotation:o.r??0, x:0, y:0, duration:o.d??0.6, ease:o.ease??'back.out(1.9)', immediateRender:false}, at);
+}
+function shape(sel, at, o={}){
+  tl.fromTo(sel, {opacity:0, scale:o.s0??0.3, rotation:o.r0??-20},
+    {opacity:1, scale:1, rotation:o.r??0, duration:o.d??0.7, ease:o.ease??'back.out(1.4)', immediateRender:false}, at);
+}
+function chip(sel, at, o={}){
+  tl.fromTo(sel, {opacity:0, scale:0.5, rotation:o.r0??10, y:50},
+    {opacity:1, scale:1, rotation:o.r??0, y:0, duration:o.d??0.5, ease:'back.out(2.2)', immediateRender:false}, at);
+}
+function out(sel, at, o={}){
+  tl.to(sel, {opacity:0, scale:o.s??0.6, rotation:o.r??8, y:o.y??-30, duration:o.d??0.28, ease:'power2.in'}, at);
+}
+function sceneSwap(from, to, at, dir){
+  // three layered panels sweep across: collage-style transition, swap the scene when fully covered
+  const panels = ['#w1','#w2','#w3'];
+  panels.forEach((p,i)=>{
+    tl.set(p, {left: dir>0 ? 1200 : -1820, rotation: -10}, at-0.4);
+    tl.to(p, {left: -310, duration:0.32, ease:'power3.in'}, at-0.34 + i*0.04);
+    tl.to(p, {left: dir>0 ? -1820 : 1200, duration:0.38, ease:'power3.out'}, at + 0.02 + (2-i)*0.04);
+  });
+  if (from) tl.set(from, {visibility:'hidden'}, at);
+  tl.set(to, {visibility:'visible'}, at);
+}
+
+// ---------- SCENE 1 ----------
+tl.set('#s1', {visibility:'visible'}, 0);
+shape('#s1-circle', 0.0, {s0:0.1});
+shape('#s1-win', 0.12, {r0:-12, r:-6});
+shape('#s1-rect', 0.2, {r0:30, r:8});
+tl.fromTo('#s1-strip', {opacity:1, x:900}, {x:0, duration:0.6, ease:'power3.out', immediateRender:false}, 0.25);
+pop('#s1-card', 0.08, {s0:0.3, r0:-38, r:-7, y0:520, d:0.9, ease:'back.out(1.5)'});
+chip('#s1-t1', P[0]??0.3, {r0:-10, r:-2});
+chip('#s1-t2', (P[1]??1.8), {r0:8, r:0});
+chip('#s1-t3', (P[1]??1.8)+0.62, {r0:-16, r:4});
+pop('#s1-bolt', (P[1]??1.8)+0.7, {r0:-40, r:12, s0:0});
+pop('#s1-spark', 1.1, {r0:30, s0:0});
+tl.to('#s1-card', {rotation:-3, scale:1.04, duration:0.5, ease:'back.out(2)'}, (P[1]??1.8)+0.62);
+
+// ---------- SCENE 2 ----------
+sceneSwap('#s1', '#s2', T[0], 1);
+shape('#s2-circle', T[0]+0.05, {s0:0.2});
+shape('#s2-rect', T[0]+0.12, {r0:-25, r:-6});
+shape('#s2-win', T[0]+0.18, {r0:20, r:7});
+tl.fromTo('#s2-env', {opacity:0, x:-700, rotation:-30, scale:0.6},
+  {opacity:1, x:0, rotation:-4, scale:1, duration:0.75, ease:'back.out(1.3)', immediateRender:false}, T[0]+0.05);
+chip('#s2-t1', P[2], {r0:-12, r:-3});
+tl.fromTo('#s2-x1', {scale:0, rotation:-90}, {scale:1, rotation:0, duration:0.4, ease:'back.out(2.5)', immediateRender:false}, P[2]+0.45);
+chip('#s2-t2', P[3], {r0:12, r:2});
+tl.fromTo('#s2-x2', {scale:0, rotation:-90}, {scale:1, rotation:0, duration:0.4, ease:'back.out(2.5)', immediateRender:false}, P[3]+0.52);
+tl.fromTo('#s2-bolt', {opacity:0, x:400, y:300, rotation:40}, {opacity:1, x:0, y:0, rotation:14, duration:0.6, ease:'back.out(1.6)', immediateRender:false}, P[3]);
+pop('#s2-spark', P[2]+0.2, {s0:0, r0:-40});
+
+// ---------- SCENE 3 ----------
+sceneSwap('#s2', '#s3', T[1], -1);
+shape('#s3-circle', T[1]+0.05);
+shape('#s3-rect', T[1]+0.1, {r0:25, r:6});
+tl.fromTo('#s3-strip', {opacity:1, x:-1000}, {x:0, duration:0.6, immediateRender:false}, T[1]+0.12);
+tl.fromTo('#s3-line', {opacity:0, scaleX:0}, {opacity:1, scaleX:1, duration:0.45, immediateRender:false}, T[1]+0.08);
+['#st1','#st2','#st3'].forEach((s,i)=> pop(s, T[1]+0.1+i*0.07, {s0:0, r0:-60, y0:0}));
+// step 1 : choose
+chip('#s3-h1', P[4], {r0:-10, r:-2});
+tl.to('#st1', {backgroundColor:'#C8F2E2', color:'#2E2A5A', scale:1.15, duration:0.3}, P[4]);
+pop('#s3-fan', P[4]+0.05, {r0:-30, r:-6, y0:200});
+tl.fromTo('#s3-cursor', {opacity:0, x:380, y:500, rotation:25}, {opacity:1, x:0, y:0, rotation:0, duration:0.5, ease:'power3.out', immediateRender:false}, P[4]+0.3);
+tl.to('#s3-cursor', {scale:0.82, duration:0.08, yoyo:true, repeat:1, ease:'power1.inOut'}, P[4]+0.82);
+tl.to('#s3-fan', {scale:1.07, duration:0.12, yoyo:true, repeat:1, ease:'power1.inOut'}, P[4]+0.84);
+// step 2 : pay safely
+out('#s3-h1', P[5]-0.24, {d:0.2, s:0.8});
+chip('#s3-h2', P[5], {r0:10, r:2});
+tl.to('#s3-line-on', {scaleX:0.5, duration:0.4}, P[5]-0.05);
+tl.to('#st1', {scale:1, duration:0.3}, P[5]);
+tl.to('#st2', {backgroundColor:'#C8F2E2', color:'#2E2A5A', scale:1.15, duration:0.3}, P[5]);
+out('#s3-cursor', P[5]-0.1, {s:0.3});
+pop('#s3-shield', P[5]+0.02, {r0:30, r:6, y0:150});
+// step 3 : receive the code on your phone
+out('#s3-h2', P[6]-0.24, {d:0.2, s:0.8});
+chip('#s3-h3', P[6], {r0:-8, r:-1});
+tl.to('#s3-line-on', {scaleX:1, duration:0.4}, P[6]-0.05);
+tl.to('#st2', {scale:1, duration:0.3}, P[6]);
+tl.to('#st3', {backgroundColor:'#C8F2E2', color:'#2E2A5A', scale:1.15, duration:0.3}, P[6]);
+tl.to('#s3-fan', {x:-60, y:-30, scale:0.8, rotation:-14, duration:0.6, ease:'power3.inOut'}, P[6]);
+tl.to('#s3-shield', {x:70, y:-40, scale:0.78, rotation:14, duration:0.6, ease:'power3.inOut'}, P[6]);
+tl.fromTo('#s3-phone', {opacity:0, y:900, rotation:20}, {opacity:1, y:0, rotation:-5, duration:0.8, ease:'back.out(1.2)', immediateRender:false}, P[6]+0.05);
+tl.fromTo('#code', {opacity:0, scale:0.4, y:80}, {opacity:1, scale:1, y:0, duration:0.45, ease:'back.out(2)', immediateRender:false}, P[6]+0.55);
+pop('#s3-check', PE[6]-0.25, {s0:0, r0:-50, r:8});
+
+// ---------- SCENE 4 ----------
+sceneSwap('#s3', '#s4', T[2], 1);
+shape('#s4-c1', P[7]-0.05);
+pop('#s4-game', P[7], {r0:-30, r:-8, y0:120});
+chip('#s4-l1', P[7]+0.08, {r0:-14, r:-5});
+shape('#s4-c2', P[8]-0.05);
+pop('#s4-cart', P[8], {r0:30, r:6, y0:120});
+chip('#s4-l2', P[8]+0.08, {r0:14, r:4});
+shape('#s4-c3', P[9]-0.05);
+pop('#s4-play', P[9], {r0:-30, r:-6, y0:120});
+chip('#s4-l3', P[9]+0.08, {r0:-14, r:-3});
+// all in one place: objects gather inside the glass window
+const G = P[10];
+out(['#s4-l1','#s4-l2','#s4-l3'], G-0.1, {s:0.5});
+out(['#s4-c1','#s4-c2','#s4-c3'], G, {s:0.4, y:0});
+chip('#s4-h', G, {r0:-10, r:-2});
+shape('#s4-win', G+0.05, {s0:0.5, r0:-8, r:-2, ease:'back.out(1.6)'});
+tl.to('#s4-game', {left:640, top:1000, width:300, rotation:-8, duration:0.7, ease:'back.inOut(1.2)'}, G+0.15);
+tl.to('#s4-cart', {left:395, top:960, width:290, rotation:4, duration:0.7, ease:'back.inOut(1.2)'}, G+0.22);
+tl.to('#s4-play', {left:130, top:1010, width:250, rotation:-6, duration:0.7, ease:'back.inOut(1.2)'}, G+0.29);
+pop('#s4-spark', G+0.7, {s0:0, r0:40});
+
+// ---------- SCENE 5 ----------
+sceneSwap('#s4', '#s5', T[3], -1);
+shape('#s5-circle', T[3]+0.04, {s0:0.1});
+shape('#s5-win', T[3]+0.12, {r0:16, r:6});
+tl.fromTo('#s5-strip', {opacity:1, x:-900}, {x:0, duration:0.6, immediateRender:false}, T[3]+0.15);
+pop('#s5-card', T[3]+0.05, {s0:0.2, r0:30, r:-6, y0:400, d:0.9, ease:'back.out(1.5)'});
+chip('#s5-t1', P[11], {r0:-12, r:-3});
+chip('#s5-t2', P[11]+0.45, {r0:12, r:2});
+pop('#s5-spark', P[11]+0.3, {s0:0, r0:-40});
+chip('#s5-t3', P[12], {r0:10, r:2});
+pop('#s5-gift', P[12]+0.05, {r0:-35, r:-8, y0:200});
+pop('#s5-bolt', P[12]+0.2, {s0:0, r0:40, r:12});
+chip('#s5-t4', P[13], {r0:-10, r:-2});
+pop('#s5-check', P[13]+0.1, {s0:0, r0:-60, r:8});
+tl.to('#s5-card', {scale:1.06, rotation:-3, duration:1.2, ease:'sine.inOut'}, P[13]);
+
+// ---------- end ----------
+tl.set({}, {}, DUR);
+
+// ---------- deterministic idle motion (floats / drift / typing) ----------
+const floats = [...document.querySelectorAll('.obj .fl')].map((el,i)=>({el, ph:i*1.37, amp:8+(i%3)*4, sp:0.9+(i%4)*0.18}));
+const drifts = [...document.querySelectorAll('[data-drift]')].map(el=>({el, k:+el.dataset.drift}));
+const CODE = 'A7K9-4QX2';
+function idle(t){
+  for (const f of floats){
+    const y = Math.sin(t*f.sp*2 + f.ph)*f.amp, r = Math.sin(t*f.sp*1.3 + f.ph)*1.6;
+    f.el.style.transform = `translateY(${y.toFixed(2)}px) rotate(${r.toFixed(2)}deg)`;
+  }
+  for (const d of drifts){
+    const x = Math.sin(t*0.6 + d.k)*18, y = Math.cos(t*0.5 + d.k*2)*22, r = t*12*(d.k%2?1:-1);
+    d.el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${r.toFixed(1)}deg)`;
+  }
+  $('#b1').style.transform = `translate(${Math.sin(t*0.35)*60}px,${Math.cos(t*0.3)*50}px)`;
+  $('#b2').style.transform = `translate(${Math.cos(t*0.32)*-70}px,${Math.sin(t*0.4)*60}px)`;
+  $('#b3').style.transform = `translate(${Math.sin(t*0.28+1)*70}px,${Math.cos(t*0.36)*-40}px)`;
+  $('#b4').style.transform = `translate(${Math.cos(t*0.4+2)*50}px,${Math.sin(t*0.3)*50}px)`;
+  $('#dots').style.transform = `translate(${(t*6)%44}px,${(t*-9)%44}px)`;
+  // code typing
+  const t0 = (P[6]??8)+0.75, n = Math.max(0, Math.min(CODE.length, Math.floor((t-t0)/0.085)));
+  $('#code-txt').textContent = CODE.slice(0,n);
+  $('#code-cur').style.opacity = (n<CODE.length || Math.floor(t*3)%2===0) ? 1 : 0;
+}
+window.renderAt = t => { tl.seek(t, false); idle(t); };
+window.DURATION = DUR;
+window.ready = document.fonts.ready.then(()=>Promise.all([...document.images].map(i=>i.decode()))).then(()=>{ renderAt(0); return true; });
+</script>
+</body>
+</html>

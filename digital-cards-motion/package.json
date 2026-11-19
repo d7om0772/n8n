@@ -1,1 +1,1 @@
-{"name":"digital-cards-motion","private":true,"version":"1.0.0","scripts":{"render":"node scripts/render.mjs"},"dependencies":{"@fontsource/alexandria":"^5.1.0","@fontsource/ibm-plex-sans-arabic":"^5.1.0","gsap":"^3.12.5"}}
+{"name":"digital-cards-motion","private":true,"version":"1.0.0","scripts":{"render":"node scripts/render.cjs"},"dependencies":{"@fontsource/alexandria":"^5.1.0","@fontsource/ibm-plex-sans-arabic":"^5.1.0","gsap":"^3.12.5"}}

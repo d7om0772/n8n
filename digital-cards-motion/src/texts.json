@@ -1,0 +1,135 @@
+[
+ {
+  "id": "s1_tag",
+  "text": "نصائح وإرشادات",
+  "size": 50,
+  "weight": 600,
+  "maxWidth": 700
+ },
+ {
+  "id": "s1_num",
+  "text": "٣",
+  "size": 176,
+  "weight": 800,
+  "maxWidth": 300
+ },
+ {
+  "id": "s1_title",
+  "text": "أخطاء شائعة",
+  "size": 132,
+  "weight": 800,
+  "maxWidth": 620
+ },
+ {
+  "id": "s1_sub",
+  "text": "لما تشتري بطاقة رقمية",
+  "size": 74,
+  "weight": 600,
+  "maxWidth": 900
+ },
+ {
+  "id": "s2_label",
+  "text": "الخطأ الأول",
+  "size": 54,
+  "weight": 700,
+  "maxWidth": 330
+ },
+ {
+  "id": "s2_h1",
+  "text": "منطقة البطاقة",
+  "size": 100,
+  "weight": 800,
+  "maxWidth": 900
+ },
+ {
+  "id": "s2_h2",
+  "text": "غير منطقة حسابك",
+  "size": 100,
+  "weight": 800,
+  "maxWidth": 900
+ },
+ {
+  "id": "s2_sol",
+  "text": "اختر بطاقة بنفس منطقة حسابك",
+  "size": 54,
+  "weight": 600,
+  "maxWidth": 690
+ },
+ {
+  "id": "s3_label",
+  "text": "الخطأ الثاني",
+  "size": 54,
+  "weight": 700,
+  "maxWidth": 330
+ },
+ {
+  "id": "s3_h1",
+  "text": "مصدر مجهول",
+  "size": 100,
+  "weight": 800,
+  "maxWidth": 900
+ },
+ {
+  "id": "s3_h2",
+  "text": "وسعر مُغري",
+  "size": 100,
+  "weight": 800,
+  "maxWidth": 900
+ },
+ {
+  "id": "s3_sol",
+  "text": "اشترِ من متجر موثوق",
+  "size": 58,
+  "weight": 600,
+  "maxWidth": 690
+ },
+ {
+  "id": "s4_label",
+  "text": "الخطأ الثالث",
+  "size": 54,
+  "weight": 700,
+  "maxWidth": 330
+ },
+ {
+  "id": "s4_h1",
+  "text": "تعطي الكود لأي أحد",
+  "size": 96,
+  "weight": 800,
+  "maxWidth": 900
+ },
+ {
+  "id": "s4_h2",
+  "text": "حتى لو قال إنه «دعم فني»",
+  "size": 62,
+  "weight": 600,
+  "maxWidth": 900
+ },
+ {
+  "id": "s4_sol",
+  "text": "الكود سرّي… لا تشاركه أبداً",
+  "size": 56,
+  "weight": 600,
+  "maxWidth": 690
+ },
+ {
+  "id": "s5_h1",
+  "text": "تجنّبها…",
+  "size": 140,
+  "weight": 800,
+  "maxWidth": 900
+ },
+ {
+  "id": "s5_h2",
+  "text": "واشحن بطاقتك بأمان",
+  "size": 86,
+  "weight": 700,
+  "maxWidth": 900
+ },
+ {
+  "id": "s5_cta",
+  "text": "احفظ النصيحة وشاركها",
+  "size": 56,
+  "weight": 600,
+  "maxWidth": 800
+ }
+]

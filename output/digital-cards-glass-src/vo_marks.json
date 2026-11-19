@@ -1,0 +1,57 @@
+[
+ {
+  "label": "title",
+  "start": 0.33,
+  "end": 1.925
+ },
+ {
+  "label": "title2",
+  "start": 2.189,
+  "end": 4.726
+ },
+ {
+  "label": "choose",
+  "start": 5.123,
+  "end": 6.321
+ },
+ {
+  "label": "games",
+  "start": 6.528,
+  "end": 7.208
+ },
+ {
+  "label": "shop",
+  "start": 7.358,
+  "end": 8.066
+ },
+ {
+  "label": "fun",
+  "start": 8.217,
+  "end": 9.019
+ },
+ {
+  "label": "pay",
+  "start": 9.415,
+  "end": 10.491
+ },
+ {
+  "label": "pay2",
+  "start": 10.679,
+  "end": 12.019
+ },
+ {
+  "label": "code",
+  "start": 12.415,
+  "end": 14.802
+ },
+ {
+  "label": "outro",
+  "start": 15.198,
+  "end": 16.632
+ },
+ {
+  "label": "outro2",
+  "start": 16.858,
+  "end": 18.434
+ }
+]

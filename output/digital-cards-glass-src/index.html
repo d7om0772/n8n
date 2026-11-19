@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<title>Digital Cards Motion</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root{
+  --ink:#252c6a; --ink2:#5b62a3; --blue:#4f86ff; --violet:#9a6bff; --sky:#7cc4ff;
+  --glass-bg:linear-gradient(140deg,rgba(255,255,255,.62),rgba(255,255,255,.22));
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#eef2ff}
+body{font-family:'Readex Pro',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:#eaf0ff}
+.abs{position:absolute;left:0;top:0;will-change:transform,opacity,filter}
+#bg{width:1080px;height:1920px;object-fit:cover}
+.blob{border-radius:50%;filter:blur(90px)}
+.shard{border-radius:46px;background:linear-gradient(145deg,rgba(255,255,255,.55),rgba(255,255,255,.08));
+  border:2px solid rgba(255,255,255,.7);box-shadow:0 20px 60px rgba(110,120,220,.12)}
+
+/* glass */
+.glass{position:relative;border-radius:48px;background:var(--glass-bg);
+  -webkit-backdrop-filter:blur(26px) saturate(150%);backdrop-filter:blur(26px) saturate(150%);
+  border:2px solid rgba(255,255,255,.85);
+  box-shadow:0 40px 90px rgba(92,104,214,.20),0 8px 24px rgba(92,104,214,.10),inset 0 2px 0 rgba(255,255,255,.95),inset 0 -2px 10px rgba(255,255,255,.35);
+  overflow:hidden}
+.glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 38%)}
+.sheen{position:absolute;top:-20%;bottom:-20%;width:38%;left:0;pointer-events:none;
+  background:linear-gradient(100deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.75) 50%,rgba(255,255,255,0) 100%);
+  mix-blend-mode:soft-light;filter:blur(6px)}
+.word{display:inline-block;will-change:transform,opacity,filter}
+.grad{display:inline-block;background:linear-gradient(90deg,var(--violet),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent;padding:0 .04em .28em;margin-bottom:-.28em}
+.rtl{direction:rtl}
+
+/* pill */
+.pill{height:92px;padding:0 38px;border-radius:46px;display:flex;align-items:center;gap:18px;font-size:36px;font-weight:500;color:var(--ink2);direction:rtl}
+.dot{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#fff 0 20%,var(--blue) 60%);box-shadow:0 0 18px 6px rgba(79,134,255,.45)}
+
+/* title panels */
+.tpanel{display:flex;align-items:center;justify-content:center;direction:rtl}
+.h1{font-size:108px;font-weight:700;line-height:1.25;letter-spacing:-.5px}
+.h2{font-size:50px;font-weight:500;color:var(--ink2)}
+
+/* window */
+.win{width:920px;border-radius:56px;direction:rtl}
+.winbar{height:118px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;border-bottom:2px solid rgba(255,255,255,.7)}
+.lights{display:flex;gap:14px;direction:ltr}
+.lights i{width:22px;height:22px;border-radius:50%;display:block}
+.wtitle{font-size:62px;font-weight:700}
+.rows{padding:38px 40px 46px;display:flex;flex-direction:column;gap:30px}
+.row{height:228px;border-radius:40px;display:flex;align-items:center;gap:34px;padding:0 34px;position:relative}
+.row img{width:184px;height:184px;object-fit:contain;flex:none}
+.row .lab{font-size:62px;font-weight:700;line-height:1.1}
+.row .sub{font-size:34px;font-weight:400;color:var(--ink2);margin-top:8px}
+.row .chev{margin-inline-start:auto;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.6);border:2px solid rgba(255,255,255,.9);color:var(--blue);font-size:38px;font-weight:600}
+.ring{position:absolute;inset:0;border-radius:40px;pointer-events:none;
+  box-shadow:inset 0 0 0 4px rgba(124,150,255,.85),inset 0 0 50px 6px rgba(150,130,255,.35)}
+.skel{position:absolute;inset:0;padding:0 34px;display:flex;align-items:center;gap:34px}
+.skel .sq{width:170px;height:170px;border-radius:36px;background:rgba(255,255,255,.55)}
+.skel .ln{height:34px;border-radius:17px;background:rgba(255,255,255,.6)}
+.shim{position:absolute;inset:0;border-radius:40px;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.8) 50%,transparent 70%);background-size:300% 100%}
+
+/* pay */
+.pay{width:900px;padding:100px 60px 56px;border-radius:56px;direction:rtl;text-align:center}
+.field{margin:40px auto 0;height:120px;border-radius:32px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;font-size:44px;font-weight:500}
+.field .num{direction:ltr;letter-spacing:4px;color:var(--ink)}
+.field .mini{width:84px;height:56px;border-radius:12px;background:linear-gradient(135deg,#bfe0ff,#d9c8ff);border:2px solid #fff}
+.btn{position:relative;margin:34px auto 0;height:136px;border-radius:68px;overflow:hidden;
+  background:linear-gradient(90deg,#8f7bff,#5f97ff);box-shadow:0 24px 50px rgba(95,120,255,.35),inset 0 2px 0 rgba(255,255,255,.6);
+  color:#fff;font-size:52px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.btn .fill{position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.0),rgba(255,255,255,.45));transform-origin:right center}
+.btn .lbl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:20px}
+.check{width:64px;height:64px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
+.check svg{width:38px;height:38px}
+.pring{position:absolute;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 0 30px rgba(140,140,255,.45),inset 0 0 30px rgba(140,140,255,.25)}
+
+/* notif */
+.notif{width:900px;padding:40px 46px 44px;border-radius:52px;direction:rtl}
+.nhead{display:flex;align-items:center;gap:26px}
+.nhead img{width:118px;height:118px;object-fit:contain}
+.nt{font-size:50px;font-weight:700}
+.ns{font-size:32px;color:var(--ink2);margin-top:4px}
+.ntime{margin-inline-start:auto;font-size:30px;color:var(--ink2);align-self:flex-start;margin-top:12px}
+.code{margin-top:30px;height:150px;border-radius:34px;display:flex;align-items:center;justify-content:center;
+  direction:ltr;font-size:72px;font-weight:600;letter-spacing:6px;color:var(--ink)}
+.code .caret{display:inline-block;width:5px;height:76px;background:var(--blue);margin-left:6px;vertical-align:middle;border-radius:3px}
+.sent{margin-top:26px;display:flex;align-items:center;gap:16px;font-size:36px;font-weight:500;color:#3f7d6a}
+.sent .ok{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#7fe0c0,#5cc7a8);display:flex;align-items:center;justify-content:center}
+.sent .ok svg{width:28px;height:28px}
+
+/* chips */
+.chip{height:104px;padding:0 34px;border-radius:52px;display:flex;align-items:center;gap:16px;font-size:44px;font-weight:600;direction:rtl}
+.chip img{width:70px;height:70px;object-fit:contain}
+
+#stage > .abs, #shards > .abs{position:absolute}
+#flash{width:1600px;height:2600px;background:linear-gradient(105deg,rgba(255,255,255,0) 35%,rgba(255,255,255,.75) 50%,rgba(255,255,255,0) 65%);mix-blend-mode:screen}
+#vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,rgba(255,255,255,0) 55%,rgba(170,170,235,.18) 100%)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <img id="bg" class="abs" src="assets/bg.png">
+  <div id="b1" class="abs blob" style="width:760px;height:760px;background:radial-gradient(circle,#a9d4ff 0%,rgba(169,212,255,0) 70%)"></div>
+  <div id="b2" class="abs blob" style="width:820px;height:820px;background:radial-gradient(circle,#d4c2ff 0%,rgba(212,194,255,0) 70%)"></div>
+  <div id="b3" class="abs blob" style="width:620px;height:620px;background:radial-gradient(circle,#ffffff 0%,rgba(255,255,255,0) 70%)"></div>
+  <div id="shards"></div>
+
+  <img id="sideA" class="abs" src="assets/card.png" data-f="hue-rotate(28deg) saturate(1.1)" style="width:700px">
+  <img id="sideB" class="abs" src="assets/card.png" data-f="hue-rotate(-30deg)" style="width:700px">
+  <!-- persistent hero card -->
+  <div id="heroWrap" class="abs" style="width:880px;height:587px">
+    <img id="hero" src="assets/card.png" style="width:100%;height:100%;object-fit:contain">
+    <div id="heroShine" style="position:absolute;inset:0;-webkit-mask:url(assets/card.png) center/contain no-repeat;mask:url(assets/card.png) center/contain no-repeat;overflow:hidden">
+      <div class="hs" style="position:absolute;top:-10%;bottom:-10%;width:30%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.95),rgba(255,255,255,0));mix-blend-mode:screen"></div>
+    </div>
+  </div>
+
+  <!-- S1 -->
+  <div id="s1pill" class="abs glass pill"><span class="dot"></span><span>خدمة رقمية فورية</span><div class="sheen"></div></div>
+  <img id="s1bolt" class="abs" src="assets/bolt.png" style="width:190px">
+  <img id="s1shield" class="abs" src="assets/shield.png" style="width:170px">
+  <div id="s1title" class="abs glass tpanel" style="width:940px;height:250px"><div class="h1"><span class="word" id="w1a">البطاقات</span> <span class="word" id="w1b"><span class="grad">الرقمية</span></span></div><div class="sheen"></div></div>
+  <div id="s1sub" class="abs glass tpanel" style="width:860px;height:128px;border-radius:64px"><div class="h2"><span class="word" id="w2a">أسهل</span> <span class="word" id="w2b">طريقة</span> <span class="word" id="w2c">للشحن</span> <span class="word" id="w2d">والإهداء</span></div><div class="sheen"></div></div>
+
+  <!-- S2 window -->
+  <div id="win" class="abs glass win">
+    <div class="winbar"><div class="wtitle"><span class="word" id="wt1">اختر</span> <span class="word grad" id="wt2">بطاقتك</span></div>
+      <div class="lights"><i style="background:#ffc6d9"></i><i style="background:#ffe6a8"></i><i style="background:#bfeedd"></i></div></div>
+    <div class="rows">
+      <div class="row glass" id="r0"><div class="ring" id="g0"></div><img src="assets/gamepad.png"><div><div class="lab">ألعاب</div><div class="sub">بطاقات شحن الألعاب</div></div><div class="chev">‹</div>
+        <div class="skel" id="k0"><div class="sq"></div><div style="flex:1"><div class="ln" style="width:52%"></div><div class="ln" style="width:78%;margin-top:22px"></div></div><div class="shim"></div></div></div>
+      <div class="row glass" id="r1"><div class="ring" id="g1"></div><img src="assets/bag.png"><div><div class="lab">تسوّق</div><div class="sub">بطاقات المتاجر الإلكترونية</div></div><div class="chev">‹</div>
+        <div class="skel" id="k1"><div class="sq"></div><div style="flex:1"><div class="ln" style="width:44%"></div><div class="ln" style="width:70%;margin-top:22px"></div></div><div class="shim"></div></div></div>
+      <div class="row glass" id="r2"><div class="ring" id="g2"></div><img src="assets/play.png"><div><div class="lab">ترفيه</div><div class="sub">اشتراكات البث والترفيه</div></div><div class="chev">‹</div>
+        <div class="skel" id="k2"><div class="sq"></div><div style="flex:1"><div class="ln" style="width:48%"></div><div class="ln" style="width:74%;margin-top:22px"></div></div><div class="shim"></div></div></div>
+    </div>
+    <div class="sheen"></div>
+  </div>
+
+  <!-- S3 pay -->
+  <div id="pay" class="abs glass pay">
+    <div class="h1" style="font-size:100px"><span class="word" id="p1">ادفع</span> <span class="word grad" id="p2">بأمان</span></div>
+    <div class="h2" style="margin-top:6px"><span class="word" id="p3">بخطوة</span> <span class="word" id="p4">واحدة</span></div>
+    <div class="field glass"><span class="mini"></span><span class="num">•••• •••• 4821</span></div>
+    <div class="btn" id="btn"><div id="okbg" style="position:absolute;inset:0;background:linear-gradient(90deg,#78d8bf,#6aa6ff);opacity:0"></div><div class="fill" id="bfill"></div>
+      <div class="lbl" id="bl1">ادفع الآن</div>
+      <div class="lbl" id="bl2"><span class="check"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="#6b7cff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>تم الدفع بنجاح</div>
+    </div>
+    <div class="sheen"></div>
+  </div>
+  <div id="pr1" class="abs pring" style="width:420px;height:420px"></div>
+  <div id="pr2" class="abs pring" style="width:420px;height:420px"></div>
+  <img id="shield" class="abs" src="assets/shield.png" style="width:360px">
+
+  <!-- S4 code -->
+  <div id="s4title" class="abs glass tpanel" style="width:940px;height:220px"><div class="h1" style="font-size:96px"><span class="word" id="c1">استلم</span> <span class="word" id="c2">الكود</span> <span class="word grad" id="c3">فوراً</span></div><div class="sheen"></div></div>
+  <img id="phone" class="abs" src="assets/phone.png" style="width:1000px">
+  <div id="notif" class="abs glass notif">
+    <div class="nhead"><img src="assets/bolt.png"><div><div class="nt">كود بطاقتك جاهز</div><div class="ns">بطاقة رقمية • 50 ر.س</div></div><div class="ntime">الآن</div></div>
+    <div class="code glass"><span id="codeTxt"></span><span class="caret" id="caret"></span></div>
+    <div class="sent" id="sent"><span class="ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>تم الإرسال إلى جوالك</div>
+    <div class="sheen"></div>
+  </div>
+
+  <!-- S5 outro -->
+  <div id="s5title" class="abs glass tpanel" style="width:900px;height:250px"><div class="h1"><span class="word" id="o1">بطاقتك</span> <span class="word" id="o2"><span class="grad">الرقمية</span></span></div><div class="sheen"></div></div>
+  <div id="s5sub" class="abs glass tpanel" style="width:760px;height:136px;border-radius:68px"><div class="h2" style="font-size:56px;font-weight:600;color:var(--ink)"><span class="word" id="o3">جاهزة</span> <span class="word" id="o4">في</span> <span class="word grad" id="o5">ثوانٍ</span></div><div class="sheen"></div></div>
+  <div id="ch0" class="abs glass chip"><img src="assets/bolt.png">فوري</div>
+  <div id="ch1" class="abs glass chip"><img src="assets/shield.png">آمن</div>
+  <div id="ch2" class="abs glass chip"><img src="assets/phone.png">سهل</div>
+
+  <div id="flash" class="abs"></div>
+  <div id="vignette"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const lerp=(a,b,p)=>a+(b-a)*p;
+const E={
+  lin:p=>p,
+  out:p=>1-Math.pow(1-p,3),
+  out5:p=>1-Math.pow(1-p,5),
+  inOut:p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2,
+  in:p=>p*p*p,
+  back:p=>{const c1=1.45,c3=c1+1;return 1+c3*Math.pow(p-1,3)+c1*Math.pow(p-1,2)},
+  expo:p=>p>=1?1:1-Math.pow(2,-10*p),
+};
+const P=(t,t0,d,e=E.out)=>e(clamp((t-t0)/d));
+const F=1600; // focal length
+let CAM={x:0,y:0,z:0};
+
+// place element: world center (x,y) in screen px, depth z (+ toward camera)
+function place(el,{x=540,y=960,z=0,s=1,r=0,ry=0,rx=0,o=1,blur=0,dof=true,persp=false}){
+  const ze=z+CAM.z; const k=F/(F-ze);
+  const sx=540+(x-540-CAM.x)*k, sy=960+(y-960-CAM.y)*k;
+  const b=blur+(dof?Math.min(22,Math.abs(z)*0.016):0);
+  let tr=`translate(${sx.toFixed(2)}px,${sy.toFixed(2)}px) translate(-50%,-50%)`;
+  if(persp) tr+=` perspective(1400px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+  tr+=` scale(${(s*k).toFixed(4)}) rotate(${r}deg)`;
+  el.style.transform=tr;
+  el.style.opacity=clamp(o).toFixed(3);
+  el.style.filter=((el.dataset.f||'')+(b>0.35?` blur(${b.toFixed(2)}px)`:'')).trim()||'none';
+  el.style.visibility=o<=0.001?'hidden':'visible';
+}
+// word reveal (fade-up + unblur)
+function word(el,t,t0,d=.45){
+  const p=P(t,t0,d,E.out);
+  el.style.opacity=p.toFixed(3);
+  el.style.transform=`translateY(${(1-p)*38}px) scale(${lerp(.92,1,p)})`;
+  el.style.filter=p<.98?`blur(${((1-p)*10).toFixed(2)}px)`:'none';
+}
+function sheen(el,t,t0,d=1.1){
+  const sh=el.querySelector(':scope > .sheen'); if(!sh) return;
+  const p=P(t,t0,d,E.inOut); const w=el.offsetWidth;
+  sh.style.transform=`translateX(${lerp(w*1.05,-w*0.45,p)}px) skewX(-12deg)`;
+  sh.style.opacity=(p>0&&p<1)?1:0;
+}
+
+// shards (deterministic)
+const SH=[
+ {x:150,y:260,z:-700,w:300,h:420,r:-14,sp:.6},{x:930,y:420,z:-900,w:360,h:260,r:12,sp:.5},
+ {x:880,y:1500,z:-650,w:280,h:380,r:18,sp:.7},{x:120,y:1640,z:-800,w:340,h:240,r:-8,sp:.4},
+ {x:990,y:980,z:-1100,w:260,h:340,r:-20,sp:.55},{x:60,y:980,z:-1000,w:220,h:300,r:10,sp:.65},
+ {x:1010,y:180,z:260,w:240,h:330,r:16,sp:.8},{x:40,y:1860,z:320,w:300,h:220,r:-12,sp:.75},
+ {x:520,y:120,z:-1300,w:420,h:200,r:4,sp:.35},
+];
+const shardsEl=$('shards');
+SH.forEach((s,i)=>{const d=document.createElement('div');d.className='abs shard';d.style.width=s.w+'px';d.style.height=s.h+'px';shardsEl.appendChild(d);s.el=d;});
+
+const T={S2:4.95,S3:9.25,S4:12.25,S5:15.0,END:19.4};
+
+function renderAt(t){
+  // camera: front view with gentle sway + dolly
+  CAM.x=26*Math.sin(t*0.42)+10*Math.sin(t*1.1);
+  CAM.y=16*Math.sin(t*0.33+1);
+  CAM.z=t*5;
+
+  // background parallax & slow zoom
+  place($('bg'),{x:540,y:960,z:-1800,s:2.36+t*0.006,dof:false});
+  place($('b1'),{x:260+120*Math.sin(t*.35),y:520+90*Math.cos(t*.3),z:-900,dof:false,o:.85});
+  place($('b2'),{x:840+110*Math.cos(t*.28),y:1380+120*Math.sin(t*.33),z:-900,dof:false,o:.8});
+  place($('b3'),{x:540+200*Math.sin(t*.22),y:900+160*Math.sin(t*.4),z:-800,dof:false,o:.7});
+  SH.forEach((s,i)=>{
+    place(s.el,{x:s.x+30*Math.sin(t*s.sp+i),y:s.y+40*Math.cos(t*s.sp*.8+i)-t*6,z:s.z,r:s.r+4*Math.sin(t*.5+i),o:s.z>0?.45:.7});
+  });
+
+  // ---------- HERO CARD (persistent) ----------
+  {
+    const bob=Math.sin(t*1.6)*12;
+    let x=540,y=760+bob,z=0,s=1,r=-6+2*Math.sin(t*.9),ry=0,o=1;
+    const pin=P(t,0,1.4,E.out5);
+    z=lerp(-1100,0,pin); o=P(t,0,.6); ry=lerp(40,-10,pin)+4*Math.sin(t*.8); r=lerp(-22,r,pin);
+    // move to background during S2-S4
+    const pout=P(t,T.S2-.15,.9,E.inOut);
+    x=lerp(x,330,pout); y=lerp(y,250+bob,pout); z=lerp(z,-900,pout); o=lerp(o,.55,pout);
+    // come back for outro
+    const pback=P(t,T.S5,1.1,E.out5);
+    x=lerp(x,540,pback); y=lerp(y,720+bob,pback); z=lerp(z,40,pback); o=lerp(o,1,pback); s=lerp(1,.86,pback);
+    place($('heroWrap'),{x,y,z,s,r,ry,o,persp:true});
+    const hs=$('heroWrap').querySelector('.hs');
+    const sp=Math.max(P(t,0.9,1.0,E.inOut)*(t<2.2?1:0), P(t,T.S5+1.0,1.0,E.inOut)*(t>T.S5+0.9?1:0));
+    hs.style.transform=`translateX(${lerp(1000,-300,sp)}px) skewX(-15deg)`;
+    hs.style.opacity=(sp>0&&sp<1)?1:0;
+    // side cards in outro
+    const pf=P(t,T.S5+.35,1.0,E.out5);
+    place($('sideA'),{x:lerp(540,300,pf),y:lerp(740,700,pf)+Math.sin(t*1.4+1)*10,z:-260,r:lerp(-6,-17,pf),o:pf*.95});
+    place($('sideB'),{x:lerp(540,780,pf),y:lerp(740,690,pf)+Math.sin(t*1.5+2)*10,z:-260,r:lerp(-6,8,pf),o:pf*.95});
+  }
+
+  // ---------- SCENE 1 ----------
+  {
+    const out=P(t,T.S2-.2,.6,E.in);
+    const pp=P(t,.1,.8,E.back);
+    place($('s1pill'),{x:540+out*700,y:lerp(260,330,P(t,.1,.8)),z:-out*300,s:lerp(.8,1,pp),o:P(t,.1,.5)*(1-out)});
+    sheen($('s1pill'),t,.6);
+    const tb=P(t,.25,.9,E.out5);
+    place($('s1title'),{x:540+out*760,y:lerp(1420,1240,tb),z:lerp(-260,0,tb)-out*300,o:P(t,.25,.5)*(1-out)});
+    word($('w1a'),t,.33); word($('w1b'),t,.95,.55);
+    sheen($('s1title'),t,1.6,1.2);
+    const sb=P(t,2.0,.8,E.out5);
+    place($('s1sub'),{x:lerp(-200,540,sb)+out*900,y:1452,z:lerp(-200,0,sb)-out*300,o:P(t,2.0,.45)*(1-out)});
+    word($('w2a'),t,2.19); word($('w2b'),t,2.62); word($('w2c'),t,3.15); word($('w2d'),t,3.75,.5);
+    sheen($('s1sub'),t,4.0,1.0);
+    const bb=P(t,1.0,.9,E.back), sb2=P(t,1.35,.9,E.back);
+    place($('s1bolt'),{x:880,y:470+Math.sin(t*2)*14,z:180-out*500,s:bb,r:12+4*Math.sin(t*1.3),o:P(t,1.0,.4)*(1-out)});
+    place($('s1shield'),{x:190,y:1010+Math.sin(t*1.7+1)*14,z:120-out*500,s:sb2,r:-10,o:P(t,1.35,.4)*(1-out)});
+  }
+
+  // ---------- SCENE 2 : window ----------
+  {
+    const a=T.S2; const pin=P(t,a,.85,E.out5); const out=P(t,T.S3-.15,.55,E.in);
+    place($('win'),{x:lerp(380,540,pin)+out*820,y:1010,z:lerp(-500,0,pin)-out*350,s:lerp(.9,1,pin),o:P(t,a,.4)*(1-out)});
+    word($('wt1'),t,5.12); word($('wt2'),t,5.55);
+    sheen($('win'),t,a+.5,1.3);
+    const times=[6.45,7.3,8.15];
+    times.forEach((tt,i)=>{
+      const row=$('r'+i), sk=$('k'+i), g=$('g'+i);
+      const rin=P(t,a+.25+i*.12,.6,E.out5);
+      const real=P(t,tt-.12,.35,E.out);
+      // row container
+      const hl=P(t,tt-.05,.3,E.out)*(1-P(t,(times[i+1]||99)-.05,.3,E.out));
+      const pop=Math.sin(clamp((t-(tt-.05))/.45)*Math.PI)*0.035;
+      row.style.opacity=rin.toFixed(3);
+      row.style.transform=`translateX(${(1-rin)*-120}px) scale(${(1+pop).toFixed(4)})`;
+      sk.style.opacity=(1-real).toFixed(3);
+      sk.querySelector('.shim').style.backgroundPosition=`${(100-((t*90)%300))}% 0`;
+      [...row.children].forEach(c=>{ if(c!==sk&&c!==g){ c.style.opacity=real.toFixed(3); if(c.tagName==='IMG'){
+        const ib=P(t,tt-.12,.6,E.back); c.style.transform=`scale(${lerp(.4,1,ib)}) rotate(${(1-ib)*-25}deg) translateY(${Math.sin(t*2+i)*4}px)`; } } });
+      g.style.opacity=hl.toFixed(3);
+      row.style.background=`linear-gradient(140deg,rgba(255,255,255,${(.5+.25*hl).toFixed(3)}),rgba(255,255,255,${(.16+.2*hl).toFixed(3)}))`;
+    });
+  }
+
+  // ---------- SCENE 3 : pay ----------
+  {
+    const a=T.S3; const pin=P(t,a+.05,.8,E.out5); const out=P(t,T.S4-.15,.55,E.in);
+    place($('pay'),{x:lerp(700,540,pin)-out*820,y:1240,z:lerp(-450,0,pin)-out*350,s:lerp(.9,1,pin),o:P(t,a+.05,.4)*(1-out)});
+    word($('p1'),t,9.42); word($('p2'),t,9.85); word($('p3'),t,10.68); word($('p4'),t,11.2);
+    sheen($('pay'),t,a+.6,1.2);
+    const sp=P(t,a+.1,.9,E.back);
+    const sy=700+Math.sin(t*1.8)*12;
+    place($('shield'),{x:540-out*820,y:sy,z:60-out*400,s:lerp(.3,1,sp),r:(1-sp)*-30+3*Math.sin(t*1.2),o:P(t,a+.1,.35)*(1-out)});
+    [$('pr1'),$('pr2')].forEach((el,i)=>{
+      const ph=((t-a-.6-i*.7)%1.4+1.4)%1.4/1.4; const on=t>a+.6?1:0;
+      place(el,{x:540-out*820,y:sy,z:40,s:lerp(.7,1.6,E.out(ph)),o:on*(1-ph)*.9*(1-out),dof:false});
+    });
+    // button: press -> progress -> success
+    const press=Math.sin(clamp((t-10.62)/.3)*Math.PI);
+    $('btn').style.transform=`scale(${(1-press*.05).toFixed(4)})`;
+    const fp=P(t,10.75,.9,E.inOut);
+    $('bfill').style.transform=`scaleX(${fp.toFixed(4)})`; $('bfill').style.opacity=(1-P(t,11.7,.3)).toFixed(3);
+    const ok=P(t,11.62,.35,E.out);
+    $('bl1').style.opacity=(1-P(t,11.5,.2)).toFixed(3);
+    $('bl2').style.opacity=ok.toFixed(3); $('bl2').style.transform=`translateY(${(1-ok)*30}px) scale(${lerp(.9,1,E.back(ok))})`;
+    $('okbg').style.opacity=ok.toFixed(3);
+  }
+
+  // ---------- SCENE 4 : code ----------
+  {
+    const a=T.S4; const out=P(t,T.S5-.15,.55,E.in);
+    const tp=P(t,a+.05,.8,E.out5);
+    place($('s4title'),{x:540+out*820,y:lerp(260,350,tp),z:lerp(-300,0,tp)-out*300,o:P(t,a+.05,.4)*(1-out)});
+    word($('c1'),t,12.42); word($('c2'),t,13.0); word($('c3'),t,13.5,.5);
+    sheen($('s4title'),t,13.9,1.0);
+    const php=P(t,a+.1,1.0,E.out5);
+    place($('phone'),{x:540+out*820,y:lerp(1900,1330,php)+Math.sin(t*1.5)*10,z:lerp(-200,-60,php)-out*300,r:lerp(12,-4,php),o:P(t,a+.1,.4)*(1-out),dof:false});
+    const np=P(t,12.85,.75,E.back);
+    place($('notif'),{x:540+out*820,y:lerp(640,860,P(t,12.85,.75,E.out5)),z:lerp(-200,30,P(t,12.85,.75,E.out5))-out*300,s:lerp(.85,1,np),o:P(t,12.85,.35)*(1-out)});
+    sheen($('notif'),t,14.2,1.0);
+    const code='7KQ2-M9XA-4PLR'; const n=Math.round(clamp((t-13.25)/1.0)*code.length);
+    $('codeTxt').textContent=code.slice(0,n);
+    $('caret').style.opacity=(t<14.4?1:(Math.floor(t*2.5)%2?0:1)).toString();
+    const sp=P(t,14.2,.45,E.out);
+    $('sent').style.opacity=sp.toFixed(3); $('sent').style.transform=`translateY(${(1-sp)*20}px)`;
+  }
+
+  // ---------- SCENE 5 : outro ----------
+  {
+    const a=T.S5;
+    const tp=P(t,a+.1,.85,E.out5);
+    place($('s5title'),{x:540,y:lerp(1360,1190,tp),z:lerp(-300,0,tp),o:P(t,a+.1,.45)});
+    word($('o1'),t,15.2); word($('o2'),t,15.8,.55);
+    sheen($('s5title'),t,16.3,1.1);
+    const sb=P(t,16.7,.7,E.back);
+    place($('s5sub'),{x:540,y:1395,z:lerp(-200,0,P(t,16.7,.7,E.out5)),s:lerp(.85,1,sb),o:P(t,16.7,.35)});
+    word($('o3'),t,16.86); word($('o4'),t,17.3); word($('o5'),t,17.55,.5);
+    sheen($('s5sub'),t,18.2,.9);
+    [[0,17.75,852],[1,17.95,540],[2,18.15,228]].forEach(([i,t0,x])=>{
+      const p=P(t,t0,.6,E.back);
+      place($('ch'+i),{x,y:lerp(1640,1570,P(t,t0,.6,E.out5))+Math.sin(t*2+i)*4,z:0,s:lerp(.6,1,p),o:P(t,t0,.3)});
+    });
+  }
+
+  // transition light sweeps
+  {
+    const marks=[T.S2-.15,T.S3-.15,T.S4-.15,T.S5-.1];
+    let p=-1; marks.forEach(m=>{ if(t>=m&&t<m+.9) p=(t-m)/.9; });
+    const fl=$('flash');
+    if(p>=0){ const e=E.inOut(p); fl.style.transform=`translate(${lerp(1100,-1700,e)}px,-340px)`; fl.style.opacity=(Math.sin(p*Math.PI)*.85).toFixed(3); fl.style.visibility='visible'; }
+    else fl.style.visibility='hidden';
+  }
+  // gentle fade-in at start
+  $('stage').style.opacity=1;
+}
+window.renderAt=renderAt;
+window.ready=document.fonts.ready.then(()=>Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))));
+if(location.hash==='#play'){const s=performance.now();(function loop(){renderAt(((performance.now()-s)/1000)%19.4);requestAnimationFrame(loop)})();}
+else renderAt(0);
+</script>
+</body>
+</html>
